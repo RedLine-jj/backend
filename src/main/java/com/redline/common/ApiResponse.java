@@ -1,4 +1,4 @@
-package com.redline.global.common;
+package com.redline.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
