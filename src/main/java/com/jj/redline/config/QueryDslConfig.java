@@ -1,4 +1,4 @@
-package com.redline.config;
+package com.jj.redline.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
