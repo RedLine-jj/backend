@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class ProductBrief {
     private String site;               // "MODEMAN"
     private CategoryDto category;      // {code, name}
+    private String brand;
 
     private String productKey;         // 목록에서 얻는 상품 키(예: "8128")
     private String url;                // 상세 URL(절대경로)
