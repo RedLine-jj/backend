@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductSnapshot {
-    private String site;               // "MODEMAN"
+    private Site site;               // "MODEMAN"
     private CategoryDto category;      // {code, name}
  
     private String brand;              // JSON-LD brand.name
@@ -25,9 +25,9 @@ public class ProductSnapshot {
     private String imageUrl;           // 대표 이미지
     private Integer price;             // 기본 가격(대표가)
 
-    private OffsetDateTime capturedAt; // 스냅샷 생성 시각(상세 파싱 완료 시각 추천)
-
+    private OffsetDateTime capturedAt; // 스냅샷 생성 시각(상세 파싱 완료 시각 추천) 
     private List<ProductOption> options;
-    
+
+    private ParseStatus parseStatus;
     private String parseMessage;       // (선택) 실패/부분실패 사유 간단 메시지
 }
