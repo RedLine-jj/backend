@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductOption {
     private String optionLabel;  // 표시 라벨 (예: "1(30)", "30", "4")
-    private String status;  // AVAILABLE / SOLD_OUT
+    private StockStatus status;  // AVAILABLE / SOLD_OUT
 }
