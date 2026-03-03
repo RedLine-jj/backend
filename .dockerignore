@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.example
+.idea
+.settings
+.classpath
+.project
+.factorypath
+bin
+build
+logs
+*.md
+architecture.html
+.sisyphus
