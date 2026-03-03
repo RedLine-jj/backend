@@ -18,7 +18,6 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(apiInfo())
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName, new SecurityScheme()
                                 .name(securitySchemeName)
