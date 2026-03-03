@@ -16,6 +16,6 @@ public class SiteController {
     @Operation(summary = "사이트 목록 조회")
     @GetMapping
     public ApiResponse<List<SiteResponse>> getSites() {
-        return ApiResponse.ok(null, null);
+        return (ApiResponse<List<SiteResponse>>) (ApiResponse<?>) ApiResponse.ok(null);
     }
 }
