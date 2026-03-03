@@ -14,6 +14,6 @@ public class SiteComparisonItem {
     @Schema(description = "사이트 이름", example = "쿠팡")
     private String siteName;
 
-    @Schema(description = "옵션별 가격 목록")
+    @Schema(description = "옵션별 가격 목록", example = "[]")
     private List<OptionPriceItem> options;
 }

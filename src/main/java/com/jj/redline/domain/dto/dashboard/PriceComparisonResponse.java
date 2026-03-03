@@ -17,6 +17,6 @@ public class PriceComparisonResponse {
     @Schema(description = "모델 이미지 URL", example = "https://example.com/image.jpg")
     private String imageUrl;
 
-    @Schema(description = "사이트별 옵션 가격 목록")
+    @Schema(description = "사이트별 옵션 가격 목록", example = "[]")
     private List<SiteComparisonItem> sites;
 }

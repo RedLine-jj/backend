@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "사이트 옵션", description = "사이트 옵션 목록/상세/이력 조회")
+@Tag(name = "사이트옵션", description = "사이트 옵션 목록/상세/이력 조회")
 @RestController
 @RequestMapping("/api/site-options")
 public class SiteOptionController {

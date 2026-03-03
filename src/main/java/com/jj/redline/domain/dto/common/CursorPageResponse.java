@@ -11,7 +11,7 @@ import java.util.List;
 @Schema(description = "무한스크롤 커서 페이징 응답")
 public class CursorPageResponse<T> {
 
-    @Schema(description = "조회된 항목 목록")
+    @Schema(description = "조회된 항목 목록", example = "[]")
     private List<T> content;
 
     @Schema(description = "다음 페이지 커서 (마지막 페이지면 null)", example = "42")
