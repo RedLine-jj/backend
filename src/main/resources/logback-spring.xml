@@ -72,4 +72,11 @@
         </logger>
     </springProfile>
 
+    <!-- test 프로파일: 콘솔만 -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
 </configuration>
