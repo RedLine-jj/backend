@@ -1,6 +1,9 @@
 package com.jj.redline.domain.dto.model;
 
+import com.jj.redline.domain.entity.ModelType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -26,4 +29,7 @@ public class ModelResponse {
 
     @Schema(description = "모델 이미지 URL", example = "https://example.com/image.jpg")
     private String imageUrl;
+
+    @Schema(description = "모델 타입", example = "DENIM_PANTS")
+    private ModelType type;
 }

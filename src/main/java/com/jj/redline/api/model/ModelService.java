@@ -33,7 +33,8 @@ public class ModelService {
                         m.getBrand().getBrandName(),
                         m.getBrand().getBrandNameKo(),
                         m.getModelName(),
-                        m.getImageUrl()
+                        m.getImageUrl(),
+                        m.getType()
                 ))
                 .toList();
         log.debug("getModels result: count={}, hasNext={}, cursor={}", content.size(), hasNext, nextCursor);

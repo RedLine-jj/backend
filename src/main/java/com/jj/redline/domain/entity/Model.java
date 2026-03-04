@@ -25,4 +25,8 @@ public class Model extends BaseEntity {
 
     @Column(name = "image_url", length = 1000)
     private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 50)
+    private ModelType type;
 }
