@@ -23,6 +23,7 @@
 | GET | /api/sites | 편집샵 목록 | |
 | GET | /api/brands | 브랜드 목록 | |
 | GET | /api/models | 모델 목록 (커서 페이징) | |
+| GET | /api/models/types | 모델 타입 목록 (앱 시작 시 1회 캐시) | |
 | GET | /api/site-options | 사이트별 재고/가격 목록 | |
 | GET | /api/site-options/{id} | 재고/가격 상세 | |
 | GET | /api/site-options/{id}/logs | 재고/가격 변동 이력 | |
