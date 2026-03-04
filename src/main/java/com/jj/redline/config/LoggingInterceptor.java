@@ -13,6 +13,10 @@ public class LoggingInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         request.setAttribute(START_TIME_ATTRIBUTE, System.currentTimeMillis());
+        String queryString = request.getQueryString();
+        String query = queryString != null ? "?" + queryString : "";
+        String ip = resolveClientIp(request);
+        log.info("--> {} {}{} ({})", request.getMethod(), request.getRequestURI(), query, ip);
         return true;
     }
 
@@ -21,9 +25,15 @@ public class LoggingInterceptor implements HandlerInterceptor {
         Long startTime = (Long) request.getAttribute(START_TIME_ATTRIBUTE);
         if (startTime != null) {
             long duration = System.currentTimeMillis() - startTime;
-            String method = request.getMethod();
-            String uri = request.getRequestURI();
-            log.info("[{} {}] {}ms", method, uri, duration);
+            log.info("<-- {} {} {} ({}ms)", request.getMethod(), request.getRequestURI(), response.getStatus(), duration);
         }
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
