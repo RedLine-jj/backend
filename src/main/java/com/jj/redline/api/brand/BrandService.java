@@ -19,8 +19,10 @@ public class BrandService {
     private final BrandRepository brandRepository;
 
     public List<BrandResponse> getBrands() {
-        return brandRepository.findAllByOrderByBrandNameAsc().stream()
+        List<BrandResponse> result = brandRepository.findAllByOrderByBrandNameAsc().stream()
                 .map(brand -> new BrandResponse(brand.getId(), brand.getBrandName(), brand.getBrandNameKo()))
                 .toList();
+        log.debug("getBrands result: count={}", result.size());
+        return result;
     }
 }

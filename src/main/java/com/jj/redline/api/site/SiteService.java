@@ -19,8 +19,10 @@ public class SiteService {
     private final SiteRepository siteRepository;
 
     public List<SiteResponse> getSites() {
-        return siteRepository.findAllByOrderBySiteNameAsc().stream()
+        List<SiteResponse> result = siteRepository.findAllByOrderBySiteNameAsc().stream()
                 .map(site -> new SiteResponse(site.getId(), site.getSiteName(), site.getSiteLink()))
                 .toList();
+        log.debug("getSites result: count={}", result.size());
+        return result;
     }
 }
