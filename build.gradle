@@ -44,6 +44,12 @@ dependencies {
 	// dotenv (.env 파일 로드)
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// Rate Limiting (Bucket4j)
+	implementation 'com.bucket4j:bucket4j-core:8.10.1'
+	implementation 'com.bucket4j:bucket4j-redis:8.10.1'
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'com.h2database:h2'
