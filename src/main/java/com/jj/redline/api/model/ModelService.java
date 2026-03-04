@@ -31,6 +31,7 @@ public class ModelService {
                         m.getId(),
                         m.getBrand().getId(),
                         m.getBrand().getBrandName(),
+                        m.getBrand().getBrandNameKo(),
                         m.getModelName(),
                         m.getImageUrl()
                 ))

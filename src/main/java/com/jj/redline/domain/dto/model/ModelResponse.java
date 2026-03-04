@@ -15,8 +15,11 @@ public class ModelResponse {
     @Schema(description = "브랜드 ID", example = "1")
     private Long brandId;
 
-    @Schema(description = "브랜드 이름", example = "삼성")
+    @Schema(description = "브랜드 이름 (영문)", example = "LVC")
     private String brandName;
+
+    @Schema(description = "브랜드 이름 (한글)", example = "리바이스 빈티지 클로딩")
+    private String brandNameKo;
 
     @Schema(description = "모델 이름", example = "갤럭시 S24")
     private String modelName;
