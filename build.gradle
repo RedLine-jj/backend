@@ -47,6 +47,9 @@ dependencies {
 	// Jsoup
 	implementation 'org.jsoup:jsoup:1.17.2'
 
+	// Spring Batch
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'com.h2database:h2'
