@@ -24,9 +24,7 @@ public class ModeManListParser {
 
         for (Element card : cards) {
             ProductBrief brief = extractFromCard(card);
-            if (brief != null) {
-                results.add(brief);
-            }
+            if (brief != null) results.add(brief);
         }
 
         return dedupeByUrl(results);
@@ -39,10 +37,17 @@ public class ModeManListParser {
         if (isBlank(href)) return null;
 
         String url = UrlNormalizer.toAbsoluteUrl(href, BASE_URL);
-        if (isBlank(url) || BASE_URL.equals(url)) return null;
+        if (isBlank(url)) return null;
+
+        // ✅ 여기서 “상품 상세 URL”만 통과
+        if (!isProductDetailUrl(url)) return null;
 
         // 이미지
-        String imgSrc = firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "src");
+        String imgSrc = firstNonBlank(
+                firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "src"),
+                firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "data-src"),
+                firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "data-original")
+        );
         String imageUrl = UrlNormalizer.toAbsoluteUrl(imgSrc, BASE_URL);
 
         // 이름
@@ -64,6 +69,24 @@ public class ModeManListParser {
                 .brand(blankToNull(brand))
                 .price(price)
                 .build();
+    }
+
+    /**
+     * 모드맨 “상품 상세”만 true
+     * 예: /product/lvc-1953-type-ii-jacket-flippen/14897/category/263/display/1/
+     */
+    private boolean isProductDetailUrl(String url) {
+        if (isBlank(url)) return false;
+
+        // list 페이지, 기타 페이지 제외
+        if (url.contains("/product/list.html")) return false;
+
+        // 상세는 보통 category/display를 포함 (실제 샘플/너가 붙인 HTML 기준)
+        if (!url.contains("/product/")) return false;
+        if (!url.contains("/category/")) return false;
+        if (!url.contains("/display/")) return false;
+
+        return true;
     }
 
     private Integer extractPrice(Element card) {

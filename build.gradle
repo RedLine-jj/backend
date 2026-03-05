@@ -70,4 +70,5 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	systemProperty "it", System.getProperty("it")
 }

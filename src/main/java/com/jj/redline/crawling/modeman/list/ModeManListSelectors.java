@@ -7,8 +7,14 @@ public final class ModeManListSelectors {
     /** 상품 카드 루트(li). 보통 Cafe24는 anchorBoxId_상품번호 형태 */
     public static final String PRODUCT_CARD = "li[id^=anchorBoxId_]";
 
+    // 상세 링크만: /product/ 로 시작 + list.html 제외
+    public static final String PRODUCT_DETAIL_LINK =
+            "a[href^=/product/]:not([href*='list.html'])";
+
+
     /** 상품 상세 링크 */
-    public static final String PRODUCT_LINK = "a[href*='/product/']";
+    public static final String PRODUCT_LINK =
+        "a[href^=/product/]:not([href*='list.html'])";
 
     /** 썸네일 이미지 */
     public static final String PRODUCT_IMAGE = "img";
