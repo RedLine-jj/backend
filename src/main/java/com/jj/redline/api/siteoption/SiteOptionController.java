@@ -8,12 +8,16 @@ import com.jj.redline.domain.dto.siteoption.SiteOptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "사이트옵션", description = "사이트 옵션 목록/상세/이력 조회")
 @RestController
 @RequestMapping("/api/site-options")
+@RequiredArgsConstructor
 public class SiteOptionController {
+
+    private final SiteOptionService siteOptionService;
 
     @Operation(summary = "사이트 옵션 목록 조회 (커서 페이징, 필터 선택)")
     @GetMapping
@@ -24,7 +28,7 @@ public class SiteOptionController {
             @Parameter(description = "커서") @RequestParam(required = false) Long cursor,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size
     ) {
-        return ApiResponse.ok((CursorPageResponse<SiteOptionResponse>) null);
+        return ApiResponse.ok(siteOptionService.getSiteOptions(siteId, modelId, status, cursor, size));
     }
 
     @Operation(summary = "사이트 옵션 상세 조회")
@@ -32,7 +36,7 @@ public class SiteOptionController {
     public ApiResponse<SiteOptionDetailResponse> getSiteOption(
             @Parameter(description = "옵션 ID") @PathVariable Long id
     ) {
-        return ApiResponse.ok((SiteOptionDetailResponse) null);
+        return ApiResponse.ok(siteOptionService.getSiteOption(id));
     }
 
     @Operation(summary = "사이트 옵션 이력 조회 (커서 페이징)")
@@ -42,6 +46,6 @@ public class SiteOptionController {
             @Parameter(description = "커서") @RequestParam(required = false) Long cursor,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size
     ) {
-        return ApiResponse.ok((CursorPageResponse<SiteOptionLogResponse>) null);
+        return ApiResponse.ok(siteOptionService.getSiteOptionLogs(id, cursor, size));
     }
 }

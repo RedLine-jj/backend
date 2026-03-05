@@ -56,6 +56,9 @@
         <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
     </springProfile>
 
     <!-- prod 프로파일: 콘솔 + 파일 + ERROR 파일 -->
