@@ -12,7 +12,7 @@
 | 인증 | JWT |
 | Rate Limiting | Bucket4j (IP당 분당 60회) |
 | API 문서 | SpringDoc OpenAPI (Swagger) |
-| 배포 | Docker, Docker Compose |
+| 배포 | systemd (EC2) |
 
 ## API 목록
 
@@ -69,17 +69,15 @@ REDIS_PORT=6379
 - Swagger UI: http://localhost:8080/swagger-ui.html
 - OpenAPI JSON: http://localhost:8080/api-docs
 
-## Docker 배포
+## 배포
 
 배포 파일 구조:
 
 ```
-/deploy/
-├── docker-compose.yml
-└── redline-backend/
-    ├── Dockerfile
-    ├── *.jar
-    └── .env
+/was/
+└── redline-0.0.1-SNAPSHOT.jar
+├── logs
+└── .env
 ```
 
 배포 절차:
@@ -91,6 +89,6 @@ REDIS_PORT=6379
 # 2. EC2로 전송
 scp build/libs/*.jar ec2-user@<EC2_IP>:/deploy/redline-backend/
 
-# 3. 컨테이너 재시작
-cd /deploy && docker compose up -d --build
+# 3. 서비스 재시작
+sudo systemctl restart redline
 ```
