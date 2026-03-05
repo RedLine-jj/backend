@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: redline
@@ -36,6 +39,8 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+    config-url: /api-docs/swagger-config
+    url: /api-docs
     tags-sorter: alpha
     operations-sorter: alpha
   default-consumes-media-type: application/json
