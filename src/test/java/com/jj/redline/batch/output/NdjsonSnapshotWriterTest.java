@@ -34,7 +34,7 @@ class NdjsonSnapshotWriterTest {
                 .name("PM-301 Indigo Classic Wide Jeans")
                 .url("https://mode-man.com/product/pm-301-indigo-classic-wide-jeans/8128/category/212/display/1/")
                 .imageUrl("https://mode-man.com/web/product/big/202208/xxx.jpg")
-                .price(378000)
+                .price(378000L)
                 .capturedAt(OffsetDateTime.of(2026,3,1,12,0,0,0, ZoneOffset.UTC))
                 .options(List.of(
                         ProductOption.builder().optionLabel("1(30)").status(StockStatus.SOLD_OUT).build()

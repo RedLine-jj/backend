@@ -34,9 +34,23 @@ public class ModeManBatchRunner implements ApplicationRunner {
             return;
         }
 
-        JobParameters params = new JobParametersBuilder()
-                .addString("runId", String.valueOf(Instant.now().toEpochMilli()))
-                .toJobParameters();
+        JobParametersBuilder builder = new JobParametersBuilder();
+
+        // Job을 재실행할 수 있도록 항상 고유한 파라미터를 추가합니다.
+        builder.addString("runId", String.valueOf(Instant.now().toEpochMilli()));
+
+        // 커맨드 라인 인자에서 key=value 형식의 파라미터를 찾아 추가합니다.
+        for (String arg : args.getNonOptionArgs()) {
+            if (arg.contains("=")) {
+                String[] parts = arg.split("=", 2);
+                if (parts.length == 2) {
+                    // categoryCode, categoryName 등을 Job 파라미터로 추가
+                    builder.addString(parts[0], parts[1]);
+                }
+            }
+        }
+
+        JobParameters params = builder.toJobParameters();
 
         log.info("[ModeManBatchRunner] start job: {}", modeManCrawlingJob.getName());
         JobExecution exec = jobLauncher.run(modeManCrawlingJob, params);

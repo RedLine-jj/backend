@@ -6,6 +6,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.jj.redline.common.config.ModeManCrawlProperties;
 import com.jj.redline.domain.dto.ProductSnapshot;
 import lombok.RequiredArgsConstructor;
+import org.springframework.batch.item.Chunk;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
@@ -18,12 +20,19 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 @RequiredArgsConstructor
-public class NdjsonSnapshotWriter {
+public class NdjsonSnapshotWriter implements ItemWriter<ProductSnapshot> {
 
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final ObjectMapper objectMapper;
     private final ModeManCrawlProperties props;
+
+    @Override
+    public void write(Chunk<? extends ProductSnapshot> chunk) throws Exception {
+        for (ProductSnapshot snapshot : chunk.getItems()) {
+            append(snapshot);
+        }
+    }
 
     /**
      * @return 실제 기록된 파일 경로

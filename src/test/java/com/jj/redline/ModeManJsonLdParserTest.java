@@ -41,7 +41,7 @@ public class ModeManJsonLdParserTest {
         ProductBrief brief = ProductBrief.builder()
                 .url("https://mode-man.com/product/pm-301-indigo-classic-wide-jeans/8128/category/212/display/1/")
                 .imageUrl("https://mode-man.com/web/product/big/202208/fallback.jpg")
-                .price(378000)
+                .price(378000L)
                 .brand("BRIEF_BRAND_SHOULD_NOT_WIN")
                 .name("BRIEF_NAME_SHOULD_NOT_WIN")
                 .build();
@@ -59,7 +59,7 @@ public class ModeManJsonLdParserTest {
         assertThat(snap.getBrand()).isEqualTo("PHIGVEL MAKERS CO.");
         assertThat(snap.getImageUrl()).isEqualTo("https://mode-man.com/web/product/big/202208/xxx.jpg");
         assertThat(snap.getUrl()).isEqualTo(brief.getUrl());
-        assertThat(snap.getPrice()).isEqualTo(378000);
+        assertThat(snap.getPrice()).isEqualTo(378000L);
 
         List<ProductOption> opts = snap.getOptions();
         assertThat(opts).hasSize(4);

@@ -1,5 +1,5 @@
 package com.jj.redline.crawling.modeman.list;
- 
+
 import com.jj.redline.domain.dto.ProductBrief;
 import org.junit.jupiter.api.Test;
 
@@ -51,13 +51,13 @@ class ModeManListParserTest {
         assertThat(b1.getImageUrl()).isEqualTo("https://mode-man.com/web/product/big/202208/289dc4318d4dbec52e8faac6176bd333.jpg");
         assertThat(b1.getName()).isEqualTo("PM-301 Indigo Classic Wide Jeans");
         assertThat(b1.getBrand()).isEqualTo("PHIGVEL MAKERS CO.");
-        assertThat(b1.getPrice()).isEqualTo(378000);
+        assertThat(b1.getPrice()).isEqualTo(378000L);
 
         ProductBrief b2 = briefs.get(1);
         assertThat(b2.getUrl()).isEqualTo("https://mode-man.com/product/00-1040-high-waist-denim-jasmin-used-washing-for-women/6737/category/212/display/1/");
         assertThat(b2.getImageUrl()).isEqualTo("https://mode-man.com/web/product/big/202401/sample.jpg");
         assertThat(b2.getBrand()).isEqualTo("BRAND2");
-        assertThat(b2.getPrice()).isEqualTo(198000);
+        assertThat(b2.getPrice()).isEqualTo(198000L);
     }
 
     @Test
@@ -83,6 +83,6 @@ class ModeManListParserTest {
 
         assertThat(briefs).hasSize(1);
         assertThat(briefs.get(0).getUrl()).isEqualTo("https://mode-man.com/product/abc/111/category/212/display/1/");
-        assertThat(briefs.get(0).getPrice()).isEqualTo(1000);
+        assertThat(briefs.get(0).getPrice()).isEqualTo(1000L);
     }
 }

@@ -14,6 +14,16 @@ public final class QueryParamExtractor {
 
     private QueryParamExtractor() {}
 
+    /**
+     * 쿼리 파라미터 값을 추출하여 반환 (없으면 null)
+     * @param url URL
+     * @param key 파라미터 키
+     * @return 파라미터 값
+     */
+    public static String extract(String url, String key) {
+        return getQueryParam(url, key).orElse(null);
+    }
+
     public static Optional<String> getQueryParam(String url, String key) {
         if (url == null || url.isBlank() || key == null || key.isBlank()) {
             return Optional.empty();

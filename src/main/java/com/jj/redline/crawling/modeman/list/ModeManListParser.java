@@ -32,17 +32,14 @@ public class ModeManListParser {
 
     private ProductBrief extractFromCard(Element card) {
 
-        // URL
         String href = firstAttr(card, ModeManListSelectors.PRODUCT_LINK, "href");
         if (isBlank(href)) return null;
 
         String url = UrlNormalizer.toAbsoluteUrl(href, BASE_URL);
         if (isBlank(url)) return null;
 
-        // ✅ 여기서 “상품 상세 URL”만 통과
         if (!isProductDetailUrl(url)) return null;
 
-        // 이미지
         String imgSrc = firstNonBlank(
                 firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "src"),
                 firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "data-src"),
@@ -50,17 +47,14 @@ public class ModeManListParser {
         );
         String imageUrl = UrlNormalizer.toAbsoluteUrl(imgSrc, BASE_URL);
 
-        // 이름
         String name = firstNonBlank(
                 firstAttr(card, ModeManListSelectors.PRODUCT_IMAGE, "alt"),
                 firstText(card, ModeManListSelectors.PRODUCT_NAME)
         );
 
-        // 브랜드
         String brand = firstText(card, ModeManListSelectors.PRODUCT_BRAND);
-
-        // 가격
-        Integer price = extractPrice(card);
+        
+        Long price = extractPrice(card);
 
         return ProductBrief.builder()
                 .url(url)
@@ -71,36 +65,42 @@ public class ModeManListParser {
                 .build();
     }
 
-    /**
-     * 모드맨 “상품 상세”만 true
-     * 예: /product/lvc-1953-type-ii-jacket-flippen/14897/category/263/display/1/
-     */
     private boolean isProductDetailUrl(String url) {
         if (isBlank(url)) return false;
-
-        // list 페이지, 기타 페이지 제외
         if (url.contains("/product/list.html")) return false;
-
-        // 상세는 보통 category/display를 포함 (실제 샘플/너가 붙인 HTML 기준)
         if (!url.contains("/product/")) return false;
         if (!url.contains("/category/")) return false;
         if (!url.contains("/display/")) return false;
-
         return true;
     }
 
-    private Integer extractPrice(Element card) {
-        // ec-data-price 우선
-        Element priceEl = card.selectFirst("[ec-data-price]");
-        if (priceEl != null) {
-            Integer p = parseIntSafe(priceEl.attr("ec-data-price"));
-            if (p != null) return p;
-        }
+    // [수정] 가격 추출 로직 안정성 강화
+    private Long extractPrice(Element card) {
+        // 1. 가격 정보를 담고 있을 가능성이 높은 요소를 먼저 찾음
+        Element priceHolder = card.selectFirst(ModeManListSelectors.PRICE_TEXT);
 
-        // 텍스트 가격 fallback
-        String priceText = firstText(card, ModeManListSelectors.PRICE_TEXT);
-        if (!isBlank(priceText)) {
-            return MoneyParser.parseToInt(priceText);
+        if (priceHolder != null) {
+            // 1a. 해당 요소에 ec-data-price 속성이 있는지 확인
+            String priceAttr = priceHolder.attr("ec-data-price");
+            if (!isBlank(priceAttr)) {
+                Long price = parseLongSafe(priceAttr);
+                if (price != null) return price;
+            }
+
+            // 1b. 속성이 없다면, 요소의 텍스트에서 가격을 파싱
+            String priceText = priceHolder.text();
+            if (!isBlank(priceText)) {
+                return MoneyParser.parseToLong(priceText);
+            }
+        }
+        
+        // 2. 최후의 수단으로 카드 전체에서 ec-data-price 속성을 다시 검색
+        Element priceEl = card.selectFirst(ModeManListSelectors.PRICE_WITH_ATTR);
+        if (priceEl != null) {
+            String priceAttr = priceEl.attr("ec-data-price");
+            if (!isBlank(priceAttr)) {
+                return parseLongSafe(priceAttr);
+            }
         }
 
         return null;
@@ -134,11 +134,11 @@ public class ModeManListParser {
         }
         return null;
     }
-
-    private Integer parseIntSafe(String raw) {
+    
+    private Long parseLongSafe(String raw) {
         if (isBlank(raw)) return null;
         try {
-            return Integer.parseInt(raw.trim());
+            return Long.parseLong(raw.trim());
         } catch (Exception e) {
             return null;
         }
