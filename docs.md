@@ -71,27 +71,51 @@ src
     └── java
         └── com/jj/redline
             ├── RedlineApplication.java  (애플리케이션 시작점, @EnableScheduling)
-            └── batch
-                ├── config
-                │   └── ModeManBatchJobConfig.java  (배치 Job/Step 설정)
-                ├── scheduler
-                │   └── BatchScheduler.java  (자동 실행 스케줄러)
-                ├── runner
-                │   └── ModeManBatchRunner.java  (수동 실행 러너)
-                ├── tasklet
-                │   └── ModeManListCrawlingTasklet.java  (1. 목록 크롤링)
-                ├── reader
-                │   └── ProductBriefReader.java  (2. 처리 대상 데이터 읽기)
-                ├── processor
-                │   └── ModeManDetailCrawlingProcessor.java  (3. 상세 크롤링)
-                └── output
-                    └── NdjsonSnapshotWriter.java  (4. 파일 저장)
-            └── crawling
-                └── modeman
-                    ├── detail
-                    │   └── ModeManJsonLdParser.java  (상세 페이지 파싱 로직)
-                    └── list
-                        └── ModeManListParser.java  (목록 페이지 파싱 로직)
+            ├── batch
+            │   ├── config
+            │   │   └── ModeManBatchJobConfig.java  (배치 Job/Step 설정)
+            │   ├── scheduler
+            │   │   └── BatchScheduler.java  (자동 실행 스케줄러)
+            │   ├── runner
+            │   │   └── ModeManBatchRunner.java  (수동 실행 러너)
+            │   ├── tasklet
+            │   │   └── ModeManListCrawlingTasklet.java  (1. 목록 크롤링)
+            │   ├── reader
+            │   │   └── ProductBriefReader.java  (2. 처리 대상 데이터 읽기)
+            │   ├── processor
+            │   │   └── ModeManDetailCrawlingProcessor.java  (3. 상세 크롤링)
+            │   └── output
+            │       └── NdjsonSnapshotWriter.java  (4. 파일 저장)
+            ├── common
+            │   ├── ApiResponse.java  (현재 미사용)
+            │   ├── config
+            │   │   ├── HttpClientConfig.java  (HTTP 클라이언트 설정)
+            │   │   └── ModeManCrawlProperties.java  (크롤링 경로/속성 설정)
+            │   └── util
+            │       ├── MoneyParser.java  (금액 파싱 유틸)
+            │       ├── QueryParamExtractor.java  (URL 쿼리 파라미터 추출 유틸)
+            │       ├── TimeUtil.java  (시간 관련 유틸)
+            │       └── UrlNormalizer.java  (URL 정규화 유틸)
+            ├── config
+            │   ├── QueryDslConfig.java  (현재 미사용)
+            │   └── SwaggerConfig.java  (현재 미사용)
+            ├── crawling
+            │   └── modeman
+            │       ├── ModeManHttpClient.java  (ModeMan 전용 HTTP 클라이언트)
+            │       ├── detail
+            │       │   └── ModeManJsonLdParser.java  (상세 페이지 파싱 로직)
+            │       └── list
+            │           ├── ModeManListParser.java  (목록 페이지 파싱 로직)
+            │           └── ModeManListSelectors.java  (목록 페이지 CSS 선택자)
+            └── domain
+                └── dto
+                    ├── CategoryDto.java
+                    ├── ParseStatus.java
+                    ├── ProductBrief.java
+                    ├── ProductOption.java
+                    ├── ProductSnapshot.java
+                    ├── Site.java
+                    └── StockStatus.java
 ```
 
 ## 6. 크롤링 프로세스 흐름

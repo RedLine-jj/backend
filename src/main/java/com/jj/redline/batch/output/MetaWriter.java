@@ -32,16 +32,19 @@ public class MetaWriter {
         Path filePath = resolveMetaPath(capturedAtDay);
         Files.createDirectories(filePath.getParent());
 
-        // pretty는 취향(원하면 enable 가능). 지금은 읽기 좋게 pretty로 저장 추천.
-        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(report);
+        // NDJSON 형식을 위해 pretty print 없이 한 줄로 직렬화
+        String jsonLine = objectMapper.writeValueAsString(report);
 
-        Files.writeString(
+        // 파일 끝에 한 줄 추가 (APPEND)
+        try (BufferedWriter writer = Files.newBufferedWriter(
                 filePath,
-                json,
                 StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING
-        );
+                StandardOpenOption.APPEND)
+        ) {
+            writer.write(jsonLine);
+            writer.newLine();
+        }
 
         return filePath;
     }

@@ -31,5 +31,5 @@ public class ModeManCrawlProperties {
     /**
      * 메타 파일명
      */
-    private String metaFileName = "meta.json";
+    private String metaFileName = "meta.ndjson";
 }

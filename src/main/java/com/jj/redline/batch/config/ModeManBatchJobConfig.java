@@ -1,5 +1,6 @@
 package com.jj.redline.batch.config;
 
+import com.jj.redline.batch.listener.JobCompletionNotificationListener;
 import com.jj.redline.batch.output.NdjsonSnapshotWriter;
 import com.jj.redline.batch.processor.ModeManDetailCrawlingProcessor;
 import com.jj.redline.batch.reader.ProductBriefReader;
@@ -32,11 +33,13 @@ public class ModeManBatchJobConfig {
     // 새로 추가될 의존성들입니다.
     private final ModeManDetailCrawlingProcessor modeManDetailCrawlingProcessor;
     private final NdjsonSnapshotWriter ndjsonSnapshotWriter;
+    private final JobCompletionNotificationListener jobCompletionNotificationListener;
 
     @Bean
     public Job modeManCrawlingJob() {
         return new JobBuilder("modeManCrawlingJob", jobRepository)
                 .incrementer(new RunIdIncrementer()) // Job 재실행을 위한 ID 자동 증가
+                .listener(jobCompletionNotificationListener)
                 .start(modeManListCrawlingStep())
                 .next(modeManDetailProcessingStep()) // 다음 스텝을 연결합니다.
                 .build();
