@@ -41,6 +41,14 @@ out/
 .env.*
 !.env.example
 
+### Sisyphus ###
+.sisyphus/
+architecture.html
+
+### Sisyphus ###
+.sisyphus/
+architecture.html
+
 ### Application Generated ###
 # 크롤링 결과물 등 애플리케이션 실행으로 생성되는 산출물
 output/

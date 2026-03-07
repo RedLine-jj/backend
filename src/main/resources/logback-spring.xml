@@ -19,11 +19,9 @@
             <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>50MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxFileSize>50MB</maxFileSize>
             <maxHistory>30</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
@@ -52,24 +50,36 @@
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
-        <logger name="com.redline" level="DEBUG" additivity="false">
+        <logger name="com.jj.redline" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
         <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
     </springProfile>
 
-    <!-- prod 프로파일: 파일 + ERROR 파일 -->
+    <!-- prod 프로파일: 콘솔 + 파일 + ERROR 파일 -->
     <springProfile name="prod">
         <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </root>
-        <logger name="com.redline" level="INFO" additivity="false">
+        <logger name="com.jj.redline" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </logger>
+    </springProfile>
+
+    <!-- test 프로파일: 콘솔만 -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
     </springProfile>
 
 </configuration>
