@@ -21,7 +21,7 @@ public final class UrlNormalizer {
             return null;
         }
 
-        String u = rawUrl.trim();
+        String u = rawUrl.trim().replace(" ", "%20");
 
         // protocol-relative
         if (u.startsWith("//")) {

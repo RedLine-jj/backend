@@ -10,25 +10,17 @@ import com.jj.redline.domain.dto.Site;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 
 @Component
-@StepScope // JobParameter를 주입받기 위해 StepScope로 지정
+@StepScope
 @RequiredArgsConstructor
 public class ModeManDetailCrawlingProcessor implements ItemProcessor<ProductBrief, ProductSnapshot> {
 
     private final ModeManHttpClient modeManHttpClient;
     private final ModeManJsonLdParser modeManJsonLdParser;
-
-    // Job Parameter에서 카테고리 정보를 주입받습니다.
-    @Value("#{jobParameters['categoryCode']}")
-    private long categoryCode;
-
-    @Value("#{jobParameters['categoryName']}")
-    private String categoryName;
 
     @Override
     public ProductSnapshot process(ProductBrief item) throws Exception {
@@ -40,7 +32,8 @@ public class ModeManDetailCrawlingProcessor implements ItemProcessor<ProductBrie
 
         // 3. Parser에 전달할 인자들 준비
         final Site site = Site.MODEMAN;
-        final CategoryDto category = new CategoryDto(categoryCode, categoryName);
+        // [수정] Job 파라미터 대신, Item으로 전달받은 ProductBrief에서 카테고리 정보를 가져옵니다.
+        final CategoryDto category = item.getCategory();
         final OffsetDateTime capturedAt = TimeUtil.now(); // 크롤링 시각
 
         // 4. ModeManJsonLdParser를 사용해 HTML에서 ProductSnapshot 파싱하기

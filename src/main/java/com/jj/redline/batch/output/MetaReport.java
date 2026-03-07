@@ -22,10 +22,10 @@ public class MetaReport {
     private OffsetDateTime finishedAt;  // UTC 권장
     private Long durationMs;
 
-    private Integer total;
-    private Integer ok;
-    private Integer partial;
-    private Integer fail;
+    private Long total;
+    private Long ok;
+    private Long partial;
+    private Long fail;
 
     // 실패/부분실패 샘플(너무 길어지면 앞에서 N개만 담는 용도)
     private List<ErrorSample> errorSamples;

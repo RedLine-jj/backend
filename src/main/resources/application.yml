@@ -1,3 +1,6 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: redline
@@ -20,11 +23,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-        default_batch_fetch_size: 100
+      show-sql: false
+      properties:
+        hibernate:
+          format_sql: true
+          default_batch_fetch_size: 100
 
 springdoc:
   api-docs:
@@ -42,3 +45,25 @@ logging:
     com.redline: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+
+---
+# 자동 스케줄러 서버로 실행하기 위한 프로필
+spring:
+  config:
+    activate:
+      on-profile: scheduler
+batch:
+  run:
+    modeman: false # 수동 실행 방지
+
+---
+# 수동으로 배치 잡을 한 번만 실행하기 위한 프로필
+spring:
+  config:
+    activate:
+      on-profile: manual-batch
+  main:
+    web-application-type: none # 웹 서버 비활성화
+batch:
+  run:
+    modeman: true # 수동 실행 활성화

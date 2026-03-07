@@ -13,6 +13,7 @@ import com.jj.redline.domain.dto.StockStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -70,8 +71,9 @@ public class ModeManJsonLdParser {
             return failSnapshot(site, category, capturedAt, brief, "NO_PRODUCT_NODE");
         }
 
-        String name = textOrNull(productNode.get("name"));
-        String brand = textOrNull(productNode.path("brand").path("name"));
+        // [수정] HTML 엔티티를 디코딩(unescape)하는 로직 추가
+        String name = unescape(textOrNull(productNode.get("name")));
+        String brand = unescape(textOrNull(productNode.path("brand").path("name")));
         String imageUrl = extractFirstImage(productNode.get("image"));
         JsonNode offersNode = productNode.get("offers");
 
@@ -116,7 +118,8 @@ public class ModeManJsonLdParser {
     private void parseOfferIntoOptions(JsonNode offer, String productName, List<ProductOption> options) {
         if (offer == null || offer.isNull()) return;
 
-        String offerName = textOrNull(offer.get("name"));
+        // [수정] HTML 엔티티 디코딩 추가
+        String offerName = unescape(textOrNull(offer.get("name")));
         String availability = textOrNull(offer.get("availability"));
         String offerUrl = textOrNull(offer.get("url"));
 
@@ -262,6 +265,11 @@ public class ModeManJsonLdParser {
     private String textOrNull(JsonNode node) {
         if (node == null || node.isNull() || !node.isTextual()) return null;
         return node.asText();
+    }
+
+    private String unescape(String text) {
+        if (isBlank(text)) return text;
+        return Parser.unescapeEntities(text, false);
     }
 
     private boolean isBlank(String s) {

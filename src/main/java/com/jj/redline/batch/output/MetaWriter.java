@@ -2,6 +2,7 @@ package com.jj.redline.batch.output;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jj.redline.common.config.ModeManCrawlProperties;
+import java.io.BufferedWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -2,7 +2,6 @@ package com.jj.redline.batch.listener;
 
 import com.jj.redline.batch.output.MetaReport;
 import com.jj.redline.batch.output.MetaWriter;
-import com.jj.redline.domain.dto.ProductBrief;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
@@ -13,18 +12,28 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JobCompletionNotificationListener implements JobExecutionListener {
 
+    private static final DateTimeFormatter FILENAME_FMT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final MetaWriter metaWriter;
+
+    @Override
+    public void beforeJob(JobExecution jobExecution) {
+        String timestamp = LocalDateTime.now().format(FILENAME_FMT);
+        String snapshotFileName = String.format("snapshot-%s.ndjson", timestamp);
+        jobExecution.getExecutionContext().putString("snapshotFileName", snapshotFileName);
+        log.info("===== Job started. Snapshot file will be: {} =====", snapshotFileName);
+    }
 
     @Override
     public void afterJob(JobExecution jobExecution) {
@@ -34,63 +43,48 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
 
         log.info("===== Job is finished. Generating meta report... =====");
 
-        // Job 파라미터에서 카테고리 정보 가져오기
-        Integer categoryCode = getIntParam(jobExecution, "categoryCode");
-        String categoryName = jobExecution.getJobParameters().getString("categoryName");
+        OffsetDateTime startedAt = toOffsetUtc(jobExecution.getStartTime());
+        OffsetDateTime finishedAt = toOffsetUtc(jobExecution.getEndTime());
+        long durationMs = (startedAt != null && finishedAt != null) ? Duration.between(startedAt, finishedAt).toMillis() : 0;
 
-        // Job 실행 시간 정보
-        OffsetDateTime startedAt = toOffsetDateTime(jobExecution.getStartTime());
-        OffsetDateTime finishedAt = toOffsetDateTime(jobExecution.getEndTime());
-        long durationMs = Duration.between(startedAt, finishedAt).toMillis();
-
-        // Step 실행 결과에서 통계 정보 집계
-        List<ProductBrief> briefList = (List<ProductBrief>) jobExecution.getExecutionContext().get("productBriefs");
-        int total = (briefList != null) ? briefList.size() : 0;
-
-        // 상세 처리 스텝의 통계를 가져옵니다.
-        StepExecution detailStepExecution = jobExecution.getStepExecutions().stream()
-                .filter(se -> se.getStepName().equals("modeManDetailProcessingStep"))
+        StepExecution crawlingStepExecution = jobExecution.getStepExecutions().stream()
+                .filter(se -> se.getStepName().equals("crawlingStep"))
                 .findFirst().orElse(null);
 
-        int writeCount = 0;
-        if (detailStepExecution != null) {
-            writeCount = detailStepExecution.getWriteCount();
+        long totalRead = 0;
+        long writeCount = 0;
+        if (crawlingStepExecution != null) {
+            totalRead = crawlingStepExecution.getReadCount();
+            writeCount = crawlingStepExecution.getWriteCount();
         }
 
-        // TODO: 정확한 PARTIAL/FAIL 카운트를 위해서는 ItemProcessor/Writer 레벨의 리스너가 필요합니다.
-        // 현재는 전체 읽기 시도 건수와 최종 쓰기 건수의 차이를 실패로 간주하여 근사치를 계산합니다.
-        int okCount = writeCount;
-        int failCount = total - okCount;
+        long okCount = writeCount;
+        long failCount = totalRead - writeCount;
 
-        // 실패 샘플 수집
         List<MetaReport.ErrorSample> errorSamples = new ArrayList<>();
-        if (detailStepExecution != null) {
-            detailStepExecution.getFailureExceptions().forEach(e -> {
-                // 실제로는 예외 내용에서 원인을 파싱하는 로직이 더 필요합니다.
+        if (crawlingStepExecution != null) {
+            crawlingStepExecution.getFailureExceptions().forEach(e -> {
                 errorSamples.add(MetaReport.ErrorSample.builder()
-                        .url(null) // 현재 구조에서는 실패한 아이템의 URL을 특정하기 어려움
+                        .url(null)
                         .reason(e.getMessage())
                         .build());
             });
         }
 
-        // 최종 리포트 객체 생성
         MetaReport report = MetaReport.builder()
                 .site("MODEMAN")
-                .categoryCode(categoryCode)
-                .categoryName(categoryName)
+                .categoryName("ALL") // 모든 카테고리를 포함하므로 "ALL"로 변경
                 .startedAt(startedAt)
                 .finishedAt(finishedAt)
                 .durationMs(durationMs)
-                .total(total)
+                .total(totalRead)
                 .ok(okCount)
-                .partial(0) // TODO: PARTIAL 상태 집계 로직 필요
+                .partial(0L)
                 .fail(failCount)
                 .errorSamples(errorSamples)
                 .build();
 
         try {
-            // MetaWriter를 사용해 meta.json 파일 작성
             metaWriter.write(report, startedAt);
             log.info("===== Meta report generated successfully. =====");
         } catch (IOException e) {
@@ -98,18 +92,8 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         }
     }
 
-    private Integer getIntParam(JobExecution jobExecution, String key) {
-        String value = jobExecution.getJobParameters().getString(key);
-        if (value == null) return null;
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private OffsetDateTime toOffsetDateTime(java.util.Date date) {
-        if (date == null) return null;
-        return date.toInstant().atOffset(ZoneOffset.UTC);
+    private OffsetDateTime toOffsetUtc(LocalDateTime ldt) {
+        if (ldt == null) return null;
+        return ldt.atOffset(ZoneOffset.UTC);
     }
 }

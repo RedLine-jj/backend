@@ -1,5 +1,8 @@
 package com.jj.redline.crawling.modeman;
 
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -7,6 +10,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+@Component
 public class ModeManHttpClient {
 
     private static final String USER_AGENT =
@@ -22,9 +26,15 @@ public class ModeManHttpClient {
     }
 
     public String get(String url) {
+        // Use UriComponentsBuilder to properly encode the URL
+        // fromUriString is more robust for potentially malformed input URLs
+        String encodedUrl = UriComponentsBuilder.fromUriString(url)
+                .encode() // Explicitly encode the entire URI
+                .build()
+                .toUriString();
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
+                    .uri(URI.create(encodedUrl))
                     .timeout(Duration.ofSeconds(15))
                     .header("User-Agent", USER_AGENT)
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
@@ -38,13 +48,13 @@ public class ModeManHttpClient {
 
             int code = response.statusCode();
             if (code < 200 || code >= 300) {
-                throw new RuntimeException("HTTP error: " + code + " url=" + url);
+                throw new RuntimeException("HTTP error: " + code + " url=" + encodedUrl);
             }
 
             return response.body();
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("HTTP request failed: " + url, e);
+            throw new RuntimeException("HTTP request failed: " + encodedUrl, e);
         } catch (IllegalArgumentException e) {
             // URI.create(url) 문제거나 restricted header 같은 케이스
             throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);
