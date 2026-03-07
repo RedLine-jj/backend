@@ -25,4 +25,10 @@ public final class ModeManListSelectors {
 
     /** 가격 텍스트 fallback */
     public static final String PRICE_TEXT = ".price, .prdPrice, .dsc, .spec";
+
+    /** 페이지네이션 컨테이너 */
+    public static final String PAGINATION_CONTAINER = "div.xans-product-normalpaging";
+
+    /** 다음 페이지 링크 */
+    public static final String NEXT_PAGE_LINK = "a[href]:contains(>)";
 }

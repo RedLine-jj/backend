@@ -14,8 +14,10 @@ public class ModeManListParser {
 
     private static final String BASE_URL = "https://mode-man.com";
 
-    public List<ProductBrief> parse(String listHtml) {
-        if (listHtml == null || listHtml.isBlank()) return List.of();
+    public ListParseResult parse(String listHtml) {
+        if (listHtml == null || listHtml.isBlank()) {
+            return ListParseResult.builder().productBriefs(List.of()).build();
+        }
 
         Document doc = Jsoup.parse(listHtml);
         Elements cards = doc.select(ModeManListSelectors.PRODUCT_CARD);
@@ -27,7 +29,9 @@ public class ModeManListParser {
             if (brief != null) results.add(brief);
         }
 
-        return dedupeByUrl(results);
+        return ListParseResult.builder()
+                .productBriefs(dedupeByUrl(results))
+                .build();
     }
 
     private ProductBrief extractFromCard(Element card) {
