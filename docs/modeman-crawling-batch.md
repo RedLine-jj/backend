@@ -64,12 +64,12 @@
 스케줄러는 '활성 구독자'의 유무에 따라 두 가지 주기로 동작합니다.
 
 - **기본 주기 (구독자 없음)**: **1시간마다** 실행됩니다. (`runSlowScheduledJob`)
-- **빠른 주기 (구독자 있음)**: **30분마다** 실행됩니다. (`runFastScheduledJob`)
+- **빠른 주기 (구독자 있음)**: **20초마다** 실행됩니다. (`runFastScheduledJob`)
 
 > **[중요]** 현재 구독 확인 로직(`hasActiveSubscriptions`)은 테스트를 위해 항상 `true`를 반환하도록 되어있습니다. 따라서 지금 애플리케이션을 서버로 실행하면 **무조건 30분마다 크롤링이 실행됩니다.** 추후 실제 데이터베이스를 연동하여 구독 여부를 확인하는 로직을 구현해야 합니다.
 
 ### 크롤링 대상
-`MultiCategoryProductReader`는 실행될 때마다 아래에 정의된 모든 카테고리를 순차적으로 크롤링합니다.
+`MultiCategoryProductReader`는 실행될 때마다 아래에 정의된 모든 카테고리를 순차적으로 크롤링하며, **각 카테고리의 모든 페이지를 순회하여 상품을 수집합니다.**
 - `Denim Jackets` (code: 263)
 - `Denim Pants` (code: 858)
 
@@ -97,16 +97,23 @@ src
             │   ├── runner
             │   │   └── ModeManBatchRunner.java  (수동 실행 러너)
             │   ├── reader
-            │   │   └── MultiCategoryProductReader.java  (1. 모든 카테고리 목록 크롤링)
+            │   │   └── MultiCategoryProductReader.java  (모든 카테고리 목록 및 페이지 크롤링)
             │   ├── processor
-            │   │   └── ModeManDetailCrawlingProcessor.java  (2. 상세 크롤링)
+            │   │   └── ModeManDetailCrawlingProcessor.java  (상세 크롤링)
             │   └── output
-            │       ├── NdjsonSnapshotWriter.java  (3. 데이터 파일 저장)
-            │       └── MetaWriter.java (4. 메타 보고서 저장)
+            │       ├── NdjsonSnapshotWriter.java  (데이터 파일 저장)
+            │       └── MetaWriter.java (메타 보고서 저장)
             ├── common
             │   ├── ... (각종 설정 및 유틸리티 클래스)
             ├── crawling
-            │   └── ... (크롤링 및 파싱 관련 클래스)
+            │   └── modeman
+            │       ├── ModeManHttpClient.java  (ModeMan 전용 HTTP 클라이언트, URL 인코딩 강화)
+            │       ├── detail
+            │       │   └── ModeManJsonLdParser.java  (상세 페이지 파싱 로직, HTML 엔티티 디코딩)
+            │       └── list
+            │           ├── ListParseResult.java (목록 파싱 결과 DTO)
+            │           ├── ModeManListParser.java  (목록 페이지 파싱 로직)
+            │           └── ModeManListSelectors.java  (목록 페이지 CSS 선택자)
             └── domain
                 └── ... (데이터 DTO 클래스)
 ```
@@ -117,8 +124,8 @@ src
 
 1.  **실행**: `BatchScheduler`(자동) 또는 `ModeManBatchRunner`(수동)가 `modeManCrawlingJob`을 실행합니다.
 2.  **시작**: `JobCompletionNotificationListener`가 잡 시작을 감지하고, 타임스탬프를 포함한 고유한 파일 이름을 생성하여 '실행 컨텍스트'에 저장합니다.
-3.  **처리 (Chunk 기반)**:
-    -   **Read**: `MultiCategoryProductReader`가 잡 시작 시 모든 대상 카테고리의 상품 목록을 한 번에 크롤링하여 리스트로 만듭니다. 그 후, 이 리스트에서 상품(`ProductBrief`)을 하나씩 꺼내 Processor에 전달합니다.
+3.  **처리 (Chunk 기반)**: 이 단계에서는 URL 인코딩 및 HTML 엔티티 디코딩을 통해 데이터의 정확성과 안정성을 확보합니다.
+    -   **Read**: `MultiCategoryProductReader`가 잡 시작 시 모든 대상 카테고리의 상품 목록을 **페이지네이션을 통해 모든 페이지를 순회하며** 크롤링하여 리스트로 만듭니다. 그 후, 이 리스트에서 상품(`ProductBrief`)을 하나씩 꺼내 Processor에 전달합니다.
     -   **Process**: `ModeManDetailCrawlingProcessor`가 상품의 상세 페이지를 크롤링/파싱하고, HTML 엔티티를 변환하여 최종 데이터(`ProductSnapshot`)를 생성합니다.
     -   **Write**: `NdjsonSnapshotWriter`가 '실행 컨텍스트'에서 고유한 파일 이름을 가져와, 처리된 `ProductSnapshot` 데이터를 해당 파일에 한 줄씩 기록합니다.
 4.  **종료**: 모든 처리가 끝나면 `JobCompletionNotificationListener`가 잡 종료를 감지하고, 전체 실행 결과를 집계하여 `meta.ndjson` 파일에 요약 보고서를 기록합니다.
@@ -126,6 +133,12 @@ src
 ## 7. 결과물 (Output)
 
 - **경로**: `{output-root-dir}/{site-dir}/{YYYY-MM-DD}/` 디렉토리 아래에 생성됩니다.
-- **데이터 파일**: `snapshot-yyyyMMdd-HHmmss.ndjson` 형식의 타임스탬프가 포함된 파일 이름으로 생성됩니다. 각 실행마다 별도의 파일이 만들어집니다.
-- **메타 파일**: `meta.ndjson` 파일에 각 잡 실행에 대한 요약 보고서가 한 줄씩 누적 기록됩니다.
+- **데이터 파일 (`snapshot-yyyyMMdd-HHmmss.ndjson`)**:
+    - 크롤링된 개별 상품의 상세 정보(`ProductSnapshot`)가 NDJSON (Newline Delimited JSON) 형식으로 저장됩니다.
+    - 각 라인이 하나의 JSON 객체이며, 상품의 모든 상세 데이터(URL, 이미지, 가격, 옵션 등)를 포함합니다.
+    - 잡이 실행될 때마다 고유한 타임스탬프(`yyyyMMdd-HHmmss`)가 포함된 파일 이름으로 생성되어, 각 실행의 결과가 독립적인 파일로 저장됩니다.
+- **메타 파일 (`meta.ndjson`)**:
+    - 각 배치 잡 실행에 대한 요약 정보(`MetaReport`)가 NDJSON 형식으로 누적 기록됩니다.
+    - 잡의 시작/종료 시간, 총 처리 시간, 처리된 상품 수(성공/실패), 에러 샘플 등 잡 실행에 대한 메타데이터를 포함합니다.
+    - 이 파일은 잡 실행의 이력을 추적하고 전반적인 크롤링 성능을 모니터링하는 데 사용됩니다.
 - **경로 설정**: `src/main/resources/application.yml` 파일의 `redline.crawl.*` 속성을 통해 구성됩니다.
