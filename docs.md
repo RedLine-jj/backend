@@ -13,9 +13,9 @@
 - Jsoup (HTML Parsing)
 - Jackson (JSON Processing)
 
-## 3. 실행 방법
+## 3. 수동 실행 방법
 
-프로젝트 루트 디렉토리에서 아래의 Gradle 명령어를 사용하여 배치 잡을 실행합니다.
+필요할 때 일회성으로 배치 잡을 직접 실행할 수 있습니다. 프로젝트 루트 디렉토리에서 아래의 Gradle 명령어를 사용합니다.
 
 ```bash
 ./gradlew bootRun --args='[스프링_옵션] [잡_이름] [잡_파라미터]'
@@ -31,68 +31,80 @@
 
 ### 명령어 인자 설명
 
-- `--spring.main.web-application-type=NONE`
-  - 내장 웹 서버(Tomcat)를 실행하지 않고 배치 애플리케이션으로만 실행합니다.
-  - 포트 충돌을 방지하고 리소스를 절약하기 위해 사용합니다.
+- `--spring.main.web-application-type=NONE`: 내장 웹 서버 없이 순수 배치 애플리케이션으로 실행합니다.
+- `--batch.run.modeman=true`: 수동 실행을 활성화하는 플래그입니다.
+- `modeManCrawlingJob`: 실행할 Job의 이름입니다.
+- `categoryCode`, `categoryName`: 크롤링할 대상 카테고리를 지정하는 잡 파라미터입니다.
 
-- `--batch.run.modeman=true`
-  - 애플리케이션 실행 시 배치를 실제로 동작시키는 활성화 플래그입니다. (`ModeManBatchRunner` 참조)
-  - 기본값은 `false`이므로, 실행을 위해서는 반드시 `true`로 설정해야 합니다.
+## 4. 자동 스케줄링
 
-- `modeManCrawlingJob`
-  - 실행할 Spring Batch Job의 이름입니다. (`ModeManBatchJobConfig` 참조)
+이 애플리케이션을 서버로 배포하면, 내장된 스케줄러(`BatchScheduler.java`)를 통해 주기적으로 크롤링을 자동 실행합니다.
 
-- `categoryCode=<카테고리_코드>`
-  - 크롤링할 대상 카테고리의 번호를 지정하는 잡 파라미터입니다. (예: `263`)
+### 실행 주기
 
-- `categoryName="<카테고리_이름>"`
-  - 크롤링할 대상 카테고리의 이름을 지정하는 잡 파라미터입니다.
-  - 이름에 공백이 있을 경우, 반드시 따옴표(`"`)로 감싸야 합니다. (예: `"Denims Jacket"`)
+스케줄러는 '활성 구독자'의 유무에 따라 두 가지 주기로 동작합니다.
 
-## 4. 아키텍처
+- **기본 주기 (구독자 없음)**: **1시간마다** 실행됩니다. (`runSlowScheduledJob`)
+- **빠른 주기 (구독자 있음)**: **30분마다** 실행됩니다. (`runFastScheduledJob`)
 
-이 배치는 `modeManCrawlingJob`이라는 하나의 Job과 2개의 순차적인 Step으로 구성됩니다.
+> **[중요]** 현재 구독 확인 로직(`hasActiveSubscriptions`)은 테스트를 위해 항상 `true`를 반환하도록 되어있습니다. 따라서 지금 애플리케이션을 서버로 실행하면 **무조건 30분마다 크롤링이 실행됩니다.** 추후 실제 데이터베이스를 연동하여 구독 여부를 확인하는 로직을 구현해야 합니다.
 
-- **Job: `modeManCrawlingJob`**
-  1.  **Step 1: `modeManListCrawlingStep` (Tasklet 기반)**
-      - `ModeManListCrawlingTasklet`이 실행됩니다.
-      - 잡 파라미터로 받은 카테고리의 상품 '목록' 페이지를 크롤링하여 각 상품의 기본 정보(`ProductBrief`) 리스트를 수집합니다.
-      - 수집된 `ProductBrief` 리스트는 다음 스텝으로 전달하기 위해 `ExecutionContext`에 저장됩니다.
+### 크롤링 대상
 
-  2.  **Step 2: `modeManDetailProcessingStep` (Chunk 기반)**
-      - **Reader (`ProductBriefReader`):** 이전 스텝의 `ExecutionContext`에서 `ProductBrief` 리스트를 가져와, 청크 단위로 하나씩 읽습니다.
-      - **Processor (`ModeManDetailCrawlingProcessor`):** `ProductBrief` 하나를 받아 해당 상품의 '상세' 페이지 URL로 접근하여 HTML을 크롤링합니다. `ModeManJsonLdParser`를 통해 페이지 내의 JSON-LD 스키마를 파싱하여 최종 데이터 형태인 `ProductSnapshot` DTO를 생성합니다.
-      - **Writer (`NdjsonSnapshotWriter`):** Processor가 생성한 `ProductSnapshot` DTO를 청크(기본 10개) 단위로 모아, 지정된 경로의 파일에 NDJSON 형태로 한 줄씩 기록합니다.
+스케줄러는 실행될 때마다 아래에 정의된 모든 카테고리를 순차적으로 크롤링합니다.
 
-## 5. 결과물 (Output)
+- `Denim Jackets` (code: 263)
+- `Denim Pants` (code: 858)
+
+### 설정 변경 방법
+
+- **주기 변경**: `src/main/java/com/jj/redline/batch/scheduler/BatchScheduler.java` 파일 상단의 `@Scheduled(cron = "...")` 표현식을 수정하여 실행 주기를 변경할 수 있습니다.
+- **대상 변경**: 같은 파일의 `categoriesToCrawl` 리스트를 수정하여 크롤링할 카테고리를 추가하거나 변경할 수 있습니다.
+
+## 5. 프로젝트 구조 및 주요 파일
+
+배치 작업의 핵심 로직과 관련된 주요 파일 구조는 다음과 같습니다.
+
+```
+src
+└── main
+    └── java
+        └── com/jj/redline
+            ├── RedlineApplication.java  (애플리케이션 시작점, @EnableScheduling)
+            └── batch
+                ├── config
+                │   └── ModeManBatchJobConfig.java  (배치 Job/Step 설정)
+                ├── scheduler
+                │   └── BatchScheduler.java  (자동 실행 스케줄러)
+                ├── runner
+                │   └── ModeManBatchRunner.java  (수동 실행 러너)
+                ├── tasklet
+                │   └── ModeManListCrawlingTasklet.java  (1. 목록 크롤링)
+                ├── reader
+                │   └── ProductBriefReader.java  (2. 처리 대상 데이터 읽기)
+                ├── processor
+                │   └── ModeManDetailCrawlingProcessor.java  (3. 상세 크롤링)
+                └── output
+                    └── NdjsonSnapshotWriter.java  (4. 파일 저장)
+            └── crawling
+                └── modeman
+                    ├── detail
+                    │   └── ModeManJsonLdParser.java  (상세 페이지 파싱 로직)
+                    └── list
+                        └── ModeManListParser.java  (목록 페이지 파싱 로직)
+```
+
+## 6. 크롤링 프로세스 흐름
+
+`modeManCrawlingJob`은 두 개의 순차적인 단계(Step)로 구성됩니다.
+
+1.  **실행**: `BatchScheduler`(자동) 또는 `ModeManBatchRunner`(수동)가 잡 파라미터를 설정하여 `modeManCrawlingJob`을 실행합니다.
+2.  **Step 1: 목록 수집 (`modeManListCrawlingStep`)**: `ModeManListCrawlingTasklet`이 카테고리 목록 페이지의 모든 상품 정보를 `ProductBrief` DTO 리스트로 수집하여 다음 스텝에 전달합니다.
+3.  **Step 2: 상세 처리 (`modeManDetailProcessingStep`)**: 청크 단위로 동작하며, `Reader`가 `ProductBrief`를 하나씩 읽고, `Processor`가 상세 페이지를 크롤링/파싱하여 최종 `ProductSnapshot` DTO를 만들면, `Writer`가 파일에 기록합니다.
+
+## 7. 결과물 (Output)
 
 - **경로 형식**: `{output-root-dir}/{site-dir}/{YYYY-MM-DD}/{snapshot-file-name}`
 - **경로 설정**: `src/main/resources/application.yml` 파일의 `local` 프로필에 정의된 `redline.crawl.*` 속성을 통해 구성됩니다.
 - **실제 예시 경로**: `/Users/soheejjang/programming/backend/output/modeman/2026-03-07/snapshot.ndjson`
 - **파일 포맷**: **NDJSON (Newline Delimited JSON)**. 파일의 각 줄이 하나의 독립적인 JSON 객체인 텍스트 파일입니다.
-
-## 6. 주요 파일
-
-- `src/main/java/com/jj/redline/batch/config/ModeManBatchJobConfig.java`
-  - Spring Batch의 Job과 Step의 흐름을 정의하는 핵심 설정 파일.
-
-- `src/main/java/com/jj/redline/batch/runner/ModeManBatchRunner.java`
-  - 애플리케이션 실행 시 Job을 트리거하고, 커맨드 라인 인자를 해석하여 Job 파라미터로 변환하는 역할을 합니다.
-
-- `src/main/java/com/jj/redline/batch/tasklet/ModeManListCrawlingTasklet.java`
-  - Step 1에서 상품 '목록' 페이지를 크롤링하는 로직을 담고 있습니다.
-
-- `src/main/java/com/jj/redline/batch/processor/ModeManDetailCrawlingProcessor.java`
-  - Step 2에서 상품 '상세' 페이지 크롤링을 지휘하고 Parser를 호출합니다.
-
-- `src/main/java/com/jj/redline/crawling/modeman/detail/ModeManJsonLdParser.java`
-  - 상세 페이지의 HTML에 포함된 JSON-LD 데이터를 파싱하여 `ProductSnapshot` DTO를 채우는 가장 핵심적인 파싱 로직을 담고 있습니다.
-
-- `src/main/java/com/jj/redline/batch/output/NdjsonSnapshotWriter.java`
-  - 최종 결과물인 `ProductSnapshot` DTO를 NDJSON 파일로 저장합니다.
-
-- `src/main/java/com/jj/redline/domain/dto/ProductSnapshot.java`
-  - 최종 결과물 하나의 데이터 구조를 정의하는 메인 DTO 클래스입니다.
-
-- `src/main/resources/application.yml`
-  - 데이터베이스, 배치 실행, 결과물 경로 등 애플리케이션의 주요 설정을 담고 있는 파일입니다.
