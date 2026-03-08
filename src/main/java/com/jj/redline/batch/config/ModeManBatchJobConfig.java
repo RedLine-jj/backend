@@ -8,6 +8,7 @@ import com.jj.redline.batch.reader.MultiCategoryProductReader;
 import com.jj.redline.common.config.ModeManCrawlProperties;
 import com.jj.redline.domain.dto.ProductBrief;
 import com.jj.redline.domain.dto.ProductSnapshot;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -55,6 +56,11 @@ public class ModeManBatchJobConfig {
                 .reader(multiCategoryProductReader)
                 .processor(modeManDetailCrawlingProcessor)
                 .writer(ndjsonSnapshotWriter(null)) // Spring이 @Value 값을 주입해줄 것이므로 null 전달
+                .faultTolerant() // 아래 실패 처리 로직을 활성화합니다.
+                .retryLimit(3)   // 최대 3번까지 재시도합니다.
+                .retry(IOException.class) // 네트워크 오류 발생 시 재시도합니다.
+                .skipLimit(Integer.MAX_VALUE) // 스킵 횟수에는 제한을 두지 않습니다.
+                .skip(Exception.class) // 재시도 실패를 포함한 모든 예외를 스킵 처리합니다.
                 .build();
     }
 

@@ -20,6 +20,7 @@ public class ModeManHttpClient {
 
     public ModeManHttpClient() {
         this.client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
