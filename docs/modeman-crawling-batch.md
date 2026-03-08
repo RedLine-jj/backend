@@ -6,14 +6,14 @@
 
 ## 2. 주요 기술
 
-| Technology | Purpose |
-| :--- | :--- |
-| `Java 17` | Runtime |
-| `Spring Boot` | Application framework |
-| `Spring Batch` | Batch processing |
-| `Gradle` | Build tool |
-| `Jsoup` | HTML parsing |
-| `Jackson` | JSON processing |
+| Technology     | Purpose               |
+| :------------- | :-------------------- |
+| `Java 17`      | Runtime               |
+| `Spring Boot`  | Application framework |
+| `Spring Batch` | Batch processing      |
+| `Gradle`       | Build tool            |
+| `Jsoup`        | HTML parsing          |
+| `Jackson`      | JSON processing       |
 
 ## 3. 실행 방법
 
@@ -84,10 +84,10 @@ Read  Process   Write
 
 - **위치**: `src/main/java/com/jj/redline/batch/scheduler/BatchScheduler.java`
 - **실행 주기**:
-  - **빠른 주기**: 구독자가 있으면 **20초마다** 실행 (`runFastScheduledJob`)
+  - **빠른 주기**: 구독자가 있으면 **20분마다** 실행 (`runFastScheduledJob`)
   - **느린 주기**: 구독자가 없으면 **1시간마다** 실행 (`runSlowScheduledJob`)
 
-> **[중요]** 현재 구독 확인 로직(`hasActiveSubscriptions`)은 테스트를 위해 항상 `true`를 반환하도록 되어있습니다. 따라서 지금 `scheduler` 프로필로 애플리케이션을 실행하면 **무조건 20초마다 크롤링이 실행됩니다.** 추후 실제 데이터베이스를 연동하여 구독 여부를 확인하는 로직을 구현해야 합니다.
+> **[중요]** 현재 구독 확인 로직(`hasActiveSubscriptions`)은 테스트를 위해 항상 `true`를 반환하도록 되어있습니다. 따라서 지금 `scheduler` 프로필로 애플리케이션을 실행하면 **무조건 20분마다 크롤링이 실행됩니다.** 추후 실제 데이터베이스를 연동하여 구독 여부를 확인하는 로직을 구현해야 합니다.
 
 ### 4.3. 크롤링 대상
 
@@ -116,6 +116,7 @@ Read  Process   Write
 
 - **경로**: `{output-root-dir}/{site-dir}/{YYYY-MM-DD}/`
 - **예시**:
+
   ```
   output/
   └ modeman/
