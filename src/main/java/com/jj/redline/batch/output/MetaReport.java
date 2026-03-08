@@ -15,11 +15,13 @@ import java.util.List;
 public class MetaReport {
 
     private String site; // "MODEMAN"
-    private Integer categoryCode;
+    private String categoryCode;
     private String categoryName;
 
     private OffsetDateTime startedAt;   // UTC 권장
+    private String krStartedAt; // KST (Asia/Seoul)
     private OffsetDateTime finishedAt;  // UTC 권장
+    private String krFinishedAt; // KST (Asia/Seoul)
     private Long durationMs;
 
     private Long total;

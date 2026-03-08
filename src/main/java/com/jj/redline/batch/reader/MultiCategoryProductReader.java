@@ -11,7 +11,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +23,7 @@ import org.springframework.stereotype.Component;
 @Component
 @StepScope
 @RequiredArgsConstructor
-public class MultiCategoryProductReader implements ItemReader<ProductBrief> {
+public class MultiCategoryProductReader implements ItemReader<ProductBrief>, StepExecutionListener {
 
     // 크롤링할 카테고리 정보를 담는 내부 클래스
     private record CategoryToCrawl(String code, String name) {}
@@ -38,6 +42,28 @@ public class MultiCategoryProductReader implements ItemReader<ProductBrief> {
     private Iterator<ProductBrief> productBriefIterator;
 
     @Override
+    public void beforeStep(StepExecution stepExecution) {
+        log.info("Initializing MultiCategoryProductReader: Fetching all product briefs...");
+        ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
+
+        String categoryNames = categoriesToCrawl.stream()
+                .map(CategoryToCrawl::name)
+                .collect(Collectors.joining(", "));
+        jobExecutionContext.putString("crawledCategoryNames", categoryNames);
+
+        String categoryCodes = categoriesToCrawl.stream()
+                .map(CategoryToCrawl::code)
+                .collect(Collectors.joining(", "));
+        jobExecutionContext.putString("crawledCategoryCodes", categoryCodes);
+    }
+
+    @Override
+    public ExitStatus afterStep(StepExecution stepExecution) {
+        // do nothing
+        return null;
+    }
+
+    @Override
     public ProductBrief read() {
         if (productBriefIterator == null) {
             initialize();
@@ -51,7 +77,6 @@ public class MultiCategoryProductReader implements ItemReader<ProductBrief> {
     }
 
     private void initialize() {
-        log.info("Initializing MultiCategoryProductReader: Fetching all product briefs...");
         List<ProductBrief> allProductBriefs = new CopyOnWriteArrayList<>();
 
         categoriesToCrawl.parallelStream().forEach(category -> {

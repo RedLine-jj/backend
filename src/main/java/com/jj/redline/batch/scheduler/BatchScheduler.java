@@ -6,6 +6,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
+@Profile("scheduler") // "scheduler" 프로필이 활성화될 때만 이 클래스가 동작하도록 제한
 @RequiredArgsConstructor
 public class BatchScheduler {
 
@@ -21,12 +23,12 @@ public class BatchScheduler {
     private final Job modeManCrawlingJob;
 
     /**
-     * 빠른 스케줄러: 2분 주기로 실행 (테스트용)
+     * 빠른 스케줄러: 20분 주기로 실행
      */
-    @Scheduled(cron = "*/20 * * * * ?")
+    @Scheduled(cron = "0 */20 * * * ?") // 20초 -> 20분으로 변경
     public void runFastScheduledJob() {
         if (hasActiveSubscriptions()) {
-            log.info("[FAST-SCHEDULER] 구독자가 있어 2분 주기로 크롤링을 실행합니다.");
+            log.info("[FAST-SCHEDULER] 구독자가 있어 20분 주기로 크롤링을 실행합니다.");
             runCrawlingJob("FAST_SCHEDULE");
         } else {
             log.info("[FAST-SCHEDULER] 구독자가 없어 실행을 건너뜁니다.");

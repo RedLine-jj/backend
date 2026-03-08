@@ -34,7 +34,7 @@ public class ModeManDetailCrawlingProcessor implements ItemProcessor<ProductBrie
         final Site site = Site.MODEMAN;
         // [수정] Job 파라미터 대신, Item으로 전달받은 ProductBrief에서 카테고리 정보를 가져옵니다.
         final CategoryDto category = item.getCategory();
-        final OffsetDateTime capturedAt = TimeUtil.now(); // 크롤링 시각
+        final OffsetDateTime capturedAt = TimeUtil.nowUtc(); // 크롤링 시각
 
         // 4. ModeManJsonLdParser를 사용해 HTML에서 ProductSnapshot 파싱하기
         ProductSnapshot snapshot = modeManJsonLdParser.parse(html, site, category, capturedAt, item);
