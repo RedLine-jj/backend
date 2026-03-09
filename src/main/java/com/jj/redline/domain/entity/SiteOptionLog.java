@@ -33,4 +33,15 @@ public class SiteOptionLog extends BaseEntity {
 
     @Column(name = "status")
     private Boolean status;
+
+    public static SiteOptionLog of(SiteOption siteOption, Integer price, Boolean status, LocalDateTime capturedAt) {
+        SiteOptionLog log = new SiteOptionLog();
+        log.siteOption = siteOption;
+        log.optionLabel = siteOption.getOptionLabel();
+        log.price = price;
+        log.status = status;
+        log.capturedAt = capturedAt;
+        log.setAuditId("redline");
+        return log;
+    }
 }

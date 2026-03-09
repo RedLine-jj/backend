@@ -8,8 +8,10 @@ import com.jj.redline.domain.entity.Model;
 import com.jj.redline.domain.entity.ModelType;
 import com.jj.redline.domain.entity.Site;
 import com.jj.redline.domain.entity.SiteOption;
+import com.jj.redline.domain.entity.SiteOptionLog;
 import com.jj.redline.domain.repository.BrandRepository;
 import com.jj.redline.domain.repository.ModelRepository;
+import com.jj.redline.domain.repository.SiteOptionLogRepository;
 import com.jj.redline.domain.repository.SiteOptionRepository;
 import com.jj.redline.domain.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -31,6 +34,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
     private final BrandRepository brandRepository;
     private final ModelRepository modelRepository;
     private final SiteOptionRepository siteOptionRepository;
+    private final SiteOptionLogRepository siteOptionLogRepository;
 
     @Override
     @Transactional
@@ -64,7 +68,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
                         return modelRepository.save(Model.of(brand, modelName, snapshot.getImageUrl(), modelType));
                     });
 
-            // Step 4: tb_site_option upsert (옵션 1개 = 행 1개)
+            // Step 4: tb_site_option upsert + Step 5: 변경 시 tb_site_option_log insert
             List<ProductOption> options = snapshot.getOptions();
             if (options == null || options.isEmpty()) continue;
             LocalDateTime capturedAt = snapshot.getCapturedAt() != null
@@ -73,16 +77,33 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
 
             for (ProductOption option : options) {
                 Boolean status = option.getStatus() == StockStatus.AVAILABLE;
-                siteOptionRepository.findBySiteAndModelAndOptionLabel(site, model, option.getOptionLabel())
-                        .ifPresentOrElse(
-                                so -> so.update(price, status, capturedAt),
-                                () -> siteOptionRepository.save(
-                                        SiteOption.of(site, model, option.getOptionLabel(),
-                                                price, snapshot.getUrl(), status, capturedAt)
-                                )
-                        );
+                SiteOption siteOption = siteOptionRepository
+                        .findBySiteAndModelAndOptionLabel(site, model, option.getOptionLabel())
+                        .orElse(null);
+
+                if (siteOption == null) {
+                    // 신규 insert
+                    siteOption = siteOptionRepository.save(
+                            SiteOption.of(site, model, option.getOptionLabel(),
+                                    price, snapshot.getUrl(), status, capturedAt));
+                    // 최초 등록도 이력 기록
+                    siteOptionLogRepository.save(
+                            SiteOptionLog.of(siteOption, price, status, capturedAt));
+                } else {
+                    // 가격 또는 재고 상태 변경 시에만 log insert
+                    boolean changed = !Objects.equals(siteOption.getPrice(), price)
+                            || !Objects.equals(siteOption.getStatus(), status);
+                    if (changed) {
+                        log.info("[DbSnapshotWriter] 변경 감지: option={}, price={}→{}, status={}→{}",
+                                option.getOptionLabel(), siteOption.getPrice(), price,
+                                siteOption.getStatus(), status);
+                        siteOptionLogRepository.save(
+                                SiteOptionLog.of(siteOption, price, status, capturedAt));
+                    }
+                    siteOption.update(price, status, capturedAt);
+                }
             }
-            log.info("[DbSnapshotWriter] saved options: model={}, count={}", modelName, options.size());
+            log.info("[DbSnapshotWriter] done: model={}, options={}", modelName, options.size());
         }
     }
 
