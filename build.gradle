@@ -44,6 +44,12 @@ dependencies {
 	// dotenv (.env 파일 로드)
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+	// Jsoup
+	implementation 'org.jsoup:jsoup:1.17.2'
+
+	// Spring Batch
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
@@ -73,4 +79,5 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	systemProperty "it", System.getProperty("it")
 }

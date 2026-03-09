@@ -46,7 +46,7 @@
     </appender>
 
     <!-- local 프로파일: 콘솔만 -->
-    <springProfile name="local">
+    <springProfile name="local, scheduler">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
