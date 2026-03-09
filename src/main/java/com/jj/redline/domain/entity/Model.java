@@ -29,4 +29,13 @@ public class Model extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", length = 50)
     private ModelType type;
+
+    public static Model of(Brand brand, String modelName, String imageUrl, ModelType type) {
+        Model model = new Model();
+        model.brand = brand;
+        model.modelName = modelName;
+        model.imageUrl = imageUrl;
+        model.type = type;
+        return model;
+    }
 }

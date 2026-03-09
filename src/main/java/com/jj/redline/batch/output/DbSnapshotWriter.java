@@ -2,8 +2,11 @@ package com.jj.redline.batch.output;
 
 import com.jj.redline.domain.dto.ProductSnapshot;
 import com.jj.redline.domain.entity.Brand;
+import com.jj.redline.domain.entity.Model;
+import com.jj.redline.domain.entity.ModelType;
 import com.jj.redline.domain.entity.Site;
 import com.jj.redline.domain.repository.BrandRepository;
+import com.jj.redline.domain.repository.ModelRepository;
 import com.jj.redline.domain.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
 
     private final SiteRepository siteRepository;
     private final BrandRepository brandRepository;
+    private final ModelRepository modelRepository;
 
     @Override
     @Transactional
@@ -42,8 +46,27 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
                         return brandRepository.save(Brand.of(brandName));
                     });
 
-            log.info("[DbSnapshotWriter] site={}, brand={}, name={}",
-                    site.getSiteName(), brand.getBrandName(), snapshot.getName());
+            // Step 3: tb_model upsert
+            String modelName = snapshot.getName();
+            if (modelName == null || modelName.isBlank()) continue;
+            ModelType modelType = resolveModelType(snapshot);
+            Model model = modelRepository.findByBrandAndModelName(brand, modelName)
+                    .orElseGet(() -> {
+                        log.info("[DbSnapshotWriter] tb_model insert: modelName={}", modelName);
+                        return modelRepository.save(Model.of(brand, modelName, snapshot.getImageUrl(), modelType));
+                    });
+
+            log.info("[DbSnapshotWriter] site={}, brand={}, model={}",
+                    site.getSiteName(), brand.getBrandName(), model.getModelName());
         }
+    }
+
+    private ModelType resolveModelType(ProductSnapshot snapshot) {
+        if (snapshot.getCategory() == null) return null;
+        return switch ((int) snapshot.getCategory().getCode()) {
+            case 263 -> ModelType.DENIM_JACKET;
+            case 858 -> ModelType.DENIM_PANTS;
+            default -> null;
+        };
     }
 }
