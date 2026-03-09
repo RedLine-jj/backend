@@ -21,4 +21,10 @@ public class Site extends BaseEntity {
 
     @Column(name = "site_link", length = 500)
     private String siteLink;
+
+    public static Site of(String siteName) {
+        Site site = new Site();
+        site.siteName = siteName;
+        return site;
+    }
 }
