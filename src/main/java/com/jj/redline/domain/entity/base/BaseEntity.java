@@ -28,4 +28,9 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Column(name = "modified_at", nullable = false)
     private LocalDateTime modifiedAt;
+
+    public void setAuditId(String id) {
+        this.createdId = id;
+        this.modifiedId = id;
+    }
 }

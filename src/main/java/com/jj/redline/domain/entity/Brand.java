@@ -25,6 +25,7 @@ public class Brand extends BaseEntity {
     public static Brand of(String brandName) {
         Brand brand = new Brand();
         brand.brandName = brandName;
+        brand.setAuditId("redline");
         return brand;
     }
 }

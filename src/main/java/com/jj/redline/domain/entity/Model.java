@@ -36,6 +36,7 @@ public class Model extends BaseEntity {
         model.modelName = modelName;
         model.imageUrl = imageUrl;
         model.type = type;
+        model.setAuditId("redline");
         return model;
     }
 }

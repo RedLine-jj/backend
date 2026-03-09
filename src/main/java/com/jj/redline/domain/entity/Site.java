@@ -25,6 +25,7 @@ public class Site extends BaseEntity {
     public static Site of(String siteName) {
         Site site = new Site();
         site.siteName = siteName;
+        site.setAuditId("redline");
         return site;
     }
 }
