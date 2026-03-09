@@ -21,4 +21,10 @@ public class Brand extends BaseEntity {
 
     @Column(name = "brand_name_ko", length = 100)
     private String brandNameKo;
+
+    public static Brand of(String brandName) {
+        Brand brand = new Brand();
+        brand.brandName = brandName;
+        return brand;
+    }
 }
