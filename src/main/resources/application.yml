@@ -44,6 +44,9 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
+cors:
+  allowed-origins: ${CORS_ORIGINS:*}
+
 logging:
   level:
     root: INFO
