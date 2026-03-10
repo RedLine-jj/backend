@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-
 import java.util.Optional;
 
 public interface SiteOptionRepository extends JpaRepository<SiteOption, Long>, SiteOptionRepositoryCustom {
@@ -16,7 +15,11 @@ public interface SiteOptionRepository extends JpaRepository<SiteOption, Long>, S
 
     @Query("SELECT so.model.id, MIN(so.price) FROM SiteOption so WHERE so.model.id IN :modelIds AND so.status = true GROUP BY so.model.id")
     List<Object[]> findMinPriceByModelIds(@Param("modelIds") List<Long> modelIds);
-
+    
     Optional<SiteOption> findBySiteAndModelAndOptionLabel(Site site, Model model, String optionLabel);
 
+    @Query("SELECT so.model.id, MIN(so.price) FROM SiteOption so WHERE so.model.id IN :modelIds AND so.status = true GROUP BY so.model.id")
+    List<Object[]> findMinPriceByModelIds(@Param("modelIds") List<Long> modelIds);
+
+    Optional<SiteOption> findBySiteAndModelAndOptionLabel(Site site, Model model, String optionLabel);
 }

@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface ModelRepository extends JpaRepository<Model, Long>, ModelRepositoryCustom {
+    long countByBrandId(Long brandId);
 
     Optional<Model> findByBrandAndModelName(Brand brand, String modelName);
 }
+
