@@ -40,4 +40,11 @@ public class ModelService {
         log.debug("getModels result: count={}, hasNext={}, cursor={}", content.size(), hasNext, nextCursor);
         return new CursorPageResponse<>(content, nextCursor, hasNext);
     }
+
+    public long getModelCount(Long brandId) {
+        if (brandId != null) {
+            return modelRepository.countByBrandId(brandId);
+        }
+        return modelRepository.count();
+    }
 }

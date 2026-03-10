@@ -28,6 +28,14 @@ public class ModelController {
         return ApiResponse.ok(modelService.getModels(brandId, cursor, size));
     }
 
+
+    @Operation(summary = "모델 총 개수 조회")
+    @GetMapping("/count")
+    public ApiResponse<Long> getModelCount(
+            @Parameter(description = "브랜드 ID (선택)") @RequestParam(required = false) Long brandId
+    ) {
+        return ApiResponse.ok(modelService.getModelCount(brandId));
+    }
     @Operation(summary = "모델 타입 목록 조회")
     @GetMapping("/types")
     public ApiResponse<java.util.List<ModelTypeResponse>> getModelTypes() {
