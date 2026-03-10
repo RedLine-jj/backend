@@ -40,4 +40,24 @@ public class SiteOption extends BaseEntity {
 
     @Column(name = "last_captured_at")
     private LocalDateTime lastCapturedAt;
+
+    public static SiteOption of(Site site, Model model, String optionLabel,
+                                Integer price, String url, Boolean status, LocalDateTime lastCapturedAt) {
+        SiteOption so = new SiteOption();
+        so.site = site;
+        so.model = model;
+        so.optionLabel = optionLabel;
+        so.price = price;
+        so.url = url;
+        so.status = status;
+        so.lastCapturedAt = lastCapturedAt;
+        so.setAuditId("redline");
+        return so;
+    }
+
+    public void update(Integer price, Boolean status, LocalDateTime lastCapturedAt) {
+        this.price = price;
+        this.status = status;
+        this.lastCapturedAt = lastCapturedAt;
+    }
 }
