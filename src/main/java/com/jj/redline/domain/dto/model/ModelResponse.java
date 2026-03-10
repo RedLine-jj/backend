@@ -4,8 +4,6 @@ import com.jj.redline.domain.entity.ModelType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
@@ -32,4 +30,7 @@ public class ModelResponse {
 
     @Schema(description = "모델 타입", example = "DENIM_PANTS")
     private ModelType type;
+
+    @Schema(description = "최저가", example = "89000")
+    private Integer lowestPrice;
 }
