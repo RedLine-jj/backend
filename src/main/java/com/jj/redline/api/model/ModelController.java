@@ -27,10 +27,11 @@ public class ModelController {
     @GetMapping
     public ApiResponse<CursorPageResponse<ModelResponse>> getModels(
             @Parameter(description = "브랜드 ID 목록 (콤마 구분, 예: 1,5,12)") @RequestParam(required = false) String brandIds,
+            @Parameter(description = "모델 타입 목록 (콤마 구분, 예: DENIM_PANTS,DENIM_JACKET)") @RequestParam(required = false) String types,
             @Parameter(description = "커서 (이전 페이지 마지막 ID)") @RequestParam(required = false) Long cursor,
             @Parameter(description = "페이지 크기", example = "20") @RequestParam(defaultValue = "20") int size
     ) {
-        return ApiResponse.ok(modelService.getModels(parseBrandIds(brandIds), cursor, size));
+        return ApiResponse.ok(modelService.getModels(parseBrandIds(brandIds), parseTypes(types), cursor, size));
     }
 
 
@@ -58,6 +59,17 @@ public class ModelController {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .map(Long::valueOf)
+                .toList();
+    }
+
+    private List<ModelType> parseTypes(String types) {
+        if (!StringUtils.hasText(types)) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(types.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(ModelType::valueOf)
                 .toList();
     }
 
