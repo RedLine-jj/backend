@@ -67,4 +67,26 @@ public class ModelService {
         }
         return modelRepository.count();
     }
+
+    public ModelResponse getModel(Long id) {
+        Model model = modelRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Model not found: " + id));
+
+        Integer lowestPrice = siteOptionRepository.findMinPriceByModelIds(List.of(id))
+                .stream()
+                .findFirst()
+                .map(row -> (Integer) row[1])
+                .orElse(null);
+
+        return new ModelResponse(
+                model.getId(),
+                model.getBrand().getId(),
+                model.getBrand().getBrandName(),
+                model.getBrand().getBrandNameKo(),
+                model.getModelName(),
+                model.getImageUrl(),
+                model.getType(),
+                lowestPrice
+        );
+    }
 }

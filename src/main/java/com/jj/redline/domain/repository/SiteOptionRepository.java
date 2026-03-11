@@ -18,4 +18,6 @@ public interface SiteOptionRepository extends JpaRepository<SiteOption, Long>, S
     
     Optional<SiteOption> findBySiteAndModelAndOptionLabel(Site site, Model model, String optionLabel);
 
+    @Query("SELECT so FROM SiteOption so JOIN FETCH so.site WHERE so.model.id = :modelId ORDER BY so.site.siteName")
+    List<SiteOption> findAllByModelIdWithSite(@Param("modelId") Long modelId);
 }

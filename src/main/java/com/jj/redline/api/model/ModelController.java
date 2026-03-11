@@ -34,6 +34,12 @@ public class ModelController {
         return ApiResponse.ok(modelService.getModels(parseBrandIds(brandIds), parseTypes(types), cursor, size));
     }
 
+    @Operation(summary = "모델 상세 조회")
+    @GetMapping("/{id}")
+    public ApiResponse<ModelResponse> getModel(@PathVariable Long id) {
+        return ApiResponse.ok(modelService.getModel(id));
+    }
+
 
     @Operation(summary = "모델 총 개수 조회")
     @GetMapping("/count")
