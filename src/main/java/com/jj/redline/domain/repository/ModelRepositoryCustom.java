@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface ModelRepositoryCustom {
 
-    List<Model> findModelsWithCursor(Long brandId, Long cursor, int size);
+    List<Model> findModelsWithCursor(List<Long> brandIds, Long cursor, int size);
 }

@@ -15,7 +15,7 @@ public class ModelRepositoryImpl implements ModelRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Model> findModelsWithCursor(Long brandId, Long cursor, int size) {
+    public List<Model> findModelsWithCursor(List<Long> brandIds, Long cursor, int size) {
         QModel model = QModel.model;
         QBrand brand = QBrand.brand;
 
@@ -23,7 +23,7 @@ public class ModelRepositoryImpl implements ModelRepositoryCustom {
                 .selectFrom(model)
                 .join(model.brand, brand).fetchJoin()
                 .where(
-                        brandIdEq(model, brandId),
+                        brandIdsIn(model, brandIds),
                         cursorLt(model, cursor)
                 )
                 .orderBy(model.id.desc())
@@ -31,8 +31,8 @@ public class ModelRepositoryImpl implements ModelRepositoryCustom {
                 .fetch();
     }
 
-    private BooleanExpression brandIdEq(QModel model, Long brandId) {
-        return brandId != null ? model.brand.id.eq(brandId) : null;
+    private BooleanExpression brandIdsIn(QModel model, List<Long> brandIds) {
+        return brandIds != null && !brandIds.isEmpty() ? model.brand.id.in(brandIds) : null;
     }
 
     private BooleanExpression cursorLt(QModel model, Long cursor) {
