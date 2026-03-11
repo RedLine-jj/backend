@@ -9,6 +9,6 @@ import lombok.Getter;
 public class SubscriptionCreateRequest {
 
     @NotNull
-    @Schema(description = "구독할 사이트 옵션 ID", example = "1")
-    private Long siteOptionId;
+    @Schema(description = "구독할 모델 ID", example = "1")
+    private Long modelId;
 }

@@ -46,4 +46,20 @@ public class AuthService {
 
         return new LoginResponse(accessToken, refreshToken);
     }
+
+    @Transactional(readOnly = true)
+    public LoginResponse refresh(String refreshToken) {
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않거나 만료된 리프레시 토큰입니다.");
+        }
+
+        String userId = jwtProvider.getUserId(refreshToken);
+        userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        String newAccessToken = jwtProvider.generateAccessToken(userId);
+        String newRefreshToken = jwtProvider.generateRefreshToken(userId);
+
+        return new LoginResponse(newAccessToken, newRefreshToken);
+    }
 }
