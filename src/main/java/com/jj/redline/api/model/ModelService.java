@@ -3,6 +3,7 @@ package com.jj.redline.api.model;
 import com.jj.redline.domain.dto.common.CursorPageResponse;
 import com.jj.redline.domain.dto.model.ModelResponse;
 import com.jj.redline.domain.entity.Model;
+import com.jj.redline.domain.entity.ModelType;
 import com.jj.redline.domain.repository.ModelRepository;
 import com.jj.redline.domain.repository.SiteOptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,8 @@ public class ModelService {
     private final ModelRepository modelRepository;
     private final SiteOptionRepository siteOptionRepository;
 
-    public CursorPageResponse<ModelResponse> getModels(Long brandId, Long cursor, int size) {
-        List<Model> models = modelRepository.findModelsWithCursor(brandId, cursor, size);
+    public CursorPageResponse<ModelResponse> getModels(List<Long> brandIds, List<ModelType> types, Long cursor, int size) {
+        List<Model> models = modelRepository.findModelsWithCursor(brandIds, types, cursor, size);
         boolean hasNext = models.size() > size;
         if (hasNext) {
             models = models.subList(0, size);
@@ -60,9 +61,9 @@ public class ModelService {
         return new CursorPageResponse<>(content, nextCursor, hasNext);
     }
 
-    public long getModelCount(Long brandId) {
-        if (brandId != null) {
-            return modelRepository.countByBrandId(brandId);
+    public long getModelCount(List<Long> brandIds) {
+        if (brandIds != null && !brandIds.isEmpty()) {
+            return modelRepository.countByBrandIdIn(brandIds);
         }
         return modelRepository.count();
     }
