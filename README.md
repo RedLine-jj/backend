@@ -20,14 +20,16 @@
 |--------|------|------|------|
 | POST | /api/auth/signup | 회원가입 | |
 | POST | /api/auth/login | 로그인 | |
+| POST | /api/auth/refresh | 토큰 갱신 | |
 | GET | /api/sites | 편집샵 목록 | |
 | GET | /api/brands | 브랜드 목록 | |
-| GET | /api/models | 모델 목록 (커서 페이징) | |
+| GET | /api/models | 모델 목록 (커서 페이징, brandIds/types 필터) | |
 | GET | /api/models/types | 모델 타입 목록 (앱 시작 시 1회 캐시) | |
 | GET | /api/site-options | 사이트별 재고/가격 목록 | |
 | GET | /api/site-options/{id} | 재고/가격 상세 | |
 | GET | /api/site-options/{id}/logs | 재고/가격 변동 이력 | |
 | GET | /api/subscriptions | 내 구독 목록 | JWT |
+| GET | /api/subscriptions/count | 내 구독 수 | JWT |
 | POST | /api/subscriptions | 구독 등록 | JWT |
 | DELETE | /api/subscriptions/{id} | 구독 삭제 | JWT |
 | GET | /api/dashboard/price-comparison | 사이트별 가격 비교 | |
@@ -66,8 +68,8 @@ REDIS_PORT=6379
 
 ### API 문서
 
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI JSON: http://localhost:8080/api-docs
+- Swagger UI: http://localhost:8081/swagger-ui.html
+- OpenAPI JSON: http://localhost:8081/api-docs
 
 ## 배포
 

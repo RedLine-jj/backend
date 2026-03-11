@@ -4,6 +4,7 @@ import com.jj.redline.common.ApiResponse;
 import com.jj.redline.domain.dto.auth.LoginRequest;
 import com.jj.redline.domain.dto.auth.LoginResponse;
 import com.jj.redline.domain.dto.auth.SignupRequest;
+import com.jj.redline.domain.dto.auth.RefreshRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -33,6 +34,13 @@ public class AuthController {
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse loginResponse = authService.login(request);
         return ApiResponse.ok(loginResponse);
+    }
+
+    @Operation(summary = "토큰 갱신")
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        LoginResponse response = authService.refresh(request.getRefreshToken());
+        return ApiResponse.ok(response);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
