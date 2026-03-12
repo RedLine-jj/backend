@@ -3,6 +3,7 @@ package com.jj.redline.api.subscription;
 import com.jj.redline.domain.dto.common.CursorPageResponse;
 import com.jj.redline.domain.dto.subscription.SubscriptionCreateRequest;
 import com.jj.redline.domain.dto.subscription.SubscriptionResponse;
+import com.jj.redline.domain.dto.subscription.TopSubscriptionResponse;
 import com.jj.redline.domain.entity.Model;
 import com.jj.redline.domain.entity.Subscription;
 import com.jj.redline.domain.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.querydsl.core.Tuple;
 import java.util.List;
 
 @Slf4j
@@ -69,6 +71,21 @@ public class SubscriptionService {
                 .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
 
         subscriptionRepository.delete(subscription);
+    }
+
+    public List<TopSubscriptionResponse> getTopSubscriptions() {
+        List<Tuple> rows = subscriptionRepository.findTopSubscribedModels(10);
+
+        List<TopSubscriptionResponse> result = rows.stream()
+                .map(row -> new TopSubscriptionResponse(
+                        row.get(0, Long.class),
+                        row.get(1, String.class),
+                        row.get(2, Long.class)
+                ))
+                .toList();
+
+        log.debug("getTopSubscriptions: size={}", result.size());
+        return result;
     }
 
     private User getCurrentUser() {

@@ -5,6 +5,7 @@ import com.jj.redline.domain.entity.QModel;
 import com.jj.redline.domain.entity.QSubscription;
 import com.jj.redline.domain.entity.Subscription;
 import com.jj.redline.domain.entity.User;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,21 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepositoryCustom 
                 )
                 .orderBy(subscription.id.desc())
                 .limit(size + 1)
+                .fetch();
+    }
+
+    @Override
+    public List<Tuple> findTopSubscribedModels(int limit) {
+        QSubscription subscription = QSubscription.subscription;
+        QModel model = QModel.model;
+
+        return queryFactory
+                .select(model.id, model.modelName, subscription.count())
+                .from(subscription)
+                .join(subscription.model, model)
+                .groupBy(model.id, model.modelName)
+                .orderBy(subscription.count().desc())
+                .limit(limit)
                 .fetch();
     }
 

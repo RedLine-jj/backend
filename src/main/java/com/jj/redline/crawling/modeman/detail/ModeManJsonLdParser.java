@@ -243,7 +243,7 @@ public class ModeManJsonLdParser {
             String last = tokens[tokens.length - 1].trim();
             if (!isBlank(last)) return last;
         }
-        return offerName.trim();
+        return null;
     }
 
     private ProductSnapshot failSnapshot(Site site, CategoryDto category, OffsetDateTime capturedAt, ProductBrief brief, String reason) {

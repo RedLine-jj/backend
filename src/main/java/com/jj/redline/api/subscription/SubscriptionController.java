@@ -4,13 +4,17 @@ import com.jj.redline.common.ApiResponse;
 import com.jj.redline.domain.dto.common.CursorPageResponse;
 import com.jj.redline.domain.dto.subscription.SubscriptionCreateRequest;
 import com.jj.redline.domain.dto.subscription.SubscriptionResponse;
+import com.jj.redline.domain.dto.subscription.TopSubscriptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "구독", description = "모델 구독 관리 (로그인 필수)")
 @SecurityRequirement(name = "bearerAuth")
@@ -50,5 +54,12 @@ public class SubscriptionController {
     ) {
         subscriptionService.deleteSubscription(id);
         return ApiResponse.ok();
+    }
+
+    @Operation(summary = "구독 수 TOP 10 모델")
+    @SecurityRequirements
+    @GetMapping("/top")
+    public ApiResponse<List<TopSubscriptionResponse>> getTopSubscriptions() {
+        return ApiResponse.ok(subscriptionService.getTopSubscriptions());
     }
 }
