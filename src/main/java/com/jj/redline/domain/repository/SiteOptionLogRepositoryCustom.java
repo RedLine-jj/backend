@@ -12,4 +12,7 @@ public interface SiteOptionLogRepositoryCustom {
 
     /** 모델 ID 기준, 일별 사이트 평균 가격 조회 (siteName, date, avgPrice) */
     List<Tuple> findDailyAvgPricesByModelId(Long modelId, LocalDate startDate);
+
+    /** 최근 재입고 목록 조회 (status: false→true 전환 감지) */
+    List<Tuple> findRecentRestocks(int limit);
 }
