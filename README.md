@@ -10,6 +10,7 @@
 | 데이터베이스 | MySQL, Redis |
 | ORM | JPA/Hibernate, QueryDSL |
 | 인증 | JWT |
+| 실시간 알림 | Redis Pub/Sub, SSE (Server-Sent Events) |
 | Rate Limiting | Bucket4j (IP당 분당 60회) |
 | API 문서 | SpringDoc OpenAPI (Swagger) |
 | 배포 | systemd (EC2) |
@@ -33,6 +34,11 @@
 | POST | /api/subscriptions | 구독 등록 | JWT |
 | DELETE | /api/subscriptions/{id} | 구독 삭제 | JWT |
 | GET | /api/dashboard/price-comparison | 사이트별 가격 비교 | |
+| GET | /api/notifications | 알림 목록 | JWT |
+| GET | /api/notifications/unread-count | 읽지 않은 알림 수 | JWT |
+| GET | /api/notifications/stream | SSE 실시간 알림 스트림 | JWT |
+| PATCH | /api/notifications/{id}/read | 알림 읽음 처리 | JWT |
+| PATCH | /api/notifications/read-all | 전체 읽음 처리 | JWT |
 
 ### 공통 응답 형식
 
@@ -42,6 +48,18 @@
   "message": "...",
   "data": {}
 }
+```
+
+## 재입고 알림 아키텍처
+
+```
+배치 크롤링 → DbSnapshotWriter (재입고 감지)
+                    ↓ Redis PUBLISH "restock"
+              RestockSubscriber
+                    ↓
+         구독자 매칭 → 알림 DB 저장 → Redis unread INCR → SSE 푸시
+                                                              ↓
+                                              프론트엔드 토스트 + 뱃지 갱신
 ```
 
 ## 로컬 실행

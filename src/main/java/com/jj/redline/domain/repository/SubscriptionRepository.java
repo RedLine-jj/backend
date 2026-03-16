@@ -5,6 +5,7 @@ import com.jj.redline.domain.entity.Subscription;
 import com.jj.redline.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long>, SubscriptionRepositoryCustom {
@@ -14,4 +15,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     boolean existsByUserAndModel(User user, Model model);
 
     Optional<Subscription> findByIdAndUser(Long id, User user);
+
+    List<Subscription> findByModel(Model model);
 }
