@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,8 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
     private final ModelRepository modelRepository;
     private final SiteOptionRepository siteOptionRepository;
     private final SiteOptionLogRepository siteOptionLogRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final ChannelTopic restockTopic;
 
     @Override
     @Transactional
@@ -75,6 +79,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
                     ? snapshot.getCapturedAt().toLocalDateTime() : LocalDateTime.now();
             Integer price = snapshot.getPrice() != null ? snapshot.getPrice().intValue() : null;
 
+            boolean restocked = false;
             for (ProductOption option : options) {
                 Boolean status = option.getStatus() == StockStatus.AVAILABLE;
                 SiteOption siteOption = siteOptionRepository
@@ -82,15 +87,12 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
                         .orElse(null);
 
                 if (siteOption == null) {
-                    // 신규 insert
                     siteOption = siteOptionRepository.save(
                             SiteOption.of(site, model, option.getOptionLabel(),
                                     price, snapshot.getUrl(), status, capturedAt));
-                    // 최초 등록도 이력 기록
                     siteOptionLogRepository.save(
                             SiteOptionLog.of(siteOption, price, status, capturedAt));
                 } else {
-                    // 가격 또는 재고 상태 변경 시에만 log insert
                     boolean changed = !Objects.equals(siteOption.getPrice(), price)
                             || !Objects.equals(siteOption.getStatus(), status);
                     if (changed) {
@@ -99,9 +101,18 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
                                 siteOption.getStatus(), status);
                         siteOptionLogRepository.save(
                                 SiteOptionLog.of(siteOption, price, status, capturedAt));
+
+                        if (!Boolean.TRUE.equals(siteOption.getStatus()) && Boolean.TRUE.equals(status)) {
+                            restocked = true;
+                        }
                     }
                     siteOption.update(price, status, capturedAt);
                 }
+            }
+
+            if (restocked) {
+                log.info("[DbSnapshotWriter] 재입고 감지 → Redis PUBLISH: modelId={}", model.getId());
+                redisTemplate.convertAndSend(restockTopic.getTopic(), String.valueOf(model.getId()));
             }
             log.info("[DbSnapshotWriter] done: model={}, options={}", modelName, options.size());
         }
