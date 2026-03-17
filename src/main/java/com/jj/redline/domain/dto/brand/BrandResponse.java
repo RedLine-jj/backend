@@ -4,10 +4,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.Serializable;
+
 @Getter
 @AllArgsConstructor
 @Schema(description = "브랜드 응답")
-public class BrandResponse {
+public class BrandResponse implements Serializable {
 
     @Schema(description = "브랜드 ID", example = "1")
     private Long id;
