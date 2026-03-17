@@ -5,6 +5,7 @@ import com.jj.redline.domain.entity.Brand;
 import com.jj.redline.domain.repository.BrandRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class BrandService {
 
     private final BrandRepository brandRepository;
 
+    @Cacheable(value = "brands")
     public List<BrandResponse> getBrands() {
         List<BrandResponse> result = brandRepository.findAllByOrderByBrandNameAsc().stream()
                 .map(brand -> new BrandResponse(brand.getId(), brand.getBrandName(), brand.getBrandNameKo()))
