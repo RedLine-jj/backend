@@ -47,7 +47,7 @@ class ModeManListIntegrationTest {
         assumeTrue(hasProductMarkers,
                 "integration test skipped: response HTML does not look like product list (maybe redirected / JS-rendered / blocked)");
 
-        List<ProductBrief> briefs = parser.parse(html);
+        List<ProductBrief> briefs = parser.parse(html).getProductBriefs();
 
         // ✅ 여기서부터는 진짜 “리스트가 파싱 가능한 HTML”이라는 전제
         assertThat(briefs).isNotEmpty();

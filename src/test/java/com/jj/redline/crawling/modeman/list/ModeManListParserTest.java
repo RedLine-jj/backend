@@ -42,7 +42,7 @@ class ModeManListParserTest {
             </body></html>
         """;
 
-        List<ProductBrief> briefs = parser.parse(html);
+        List<ProductBrief> briefs = parser.parse(html).getProductBriefs();
 
         assertThat(briefs).hasSize(2);
 
@@ -79,7 +79,7 @@ class ModeManListParserTest {
             </body></html>
         """;
 
-        List<ProductBrief> briefs = parser.parse(html);
+        List<ProductBrief> briefs = parser.parse(html).getProductBriefs();
 
         assertThat(briefs).hasSize(1);
         assertThat(briefs.get(0).getUrl()).isEqualTo("https://mode-man.com/product/abc/111/category/212/display/1/");
