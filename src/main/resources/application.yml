@@ -59,6 +59,11 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 1800000
   refresh-token-expiration: 604800000
+
+llm:
+  api-key: ${GROQ_API_KEY:}
+  model: llama-3.3-70b-versatile
+  base-url: https://api.groq.com/openai/v1/chat/completions
 ---
 # 자동 스케줄러 서버로 실행하기 위한 프로필
 spring:
