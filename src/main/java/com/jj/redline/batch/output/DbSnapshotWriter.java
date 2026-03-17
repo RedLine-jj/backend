@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Component;
@@ -39,6 +40,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
     private final SiteOptionLogRepository siteOptionLogRepository;
     private final StringRedisTemplate redisTemplate;
     private final ChannelTopic restockTopic;
+    private final CacheManager cacheManager;
 
     @Override
     @Transactional
@@ -50,6 +52,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
             Site site = siteRepository.findBySiteName(siteName)
                     .orElseGet(() -> {
                         log.info("[DbSnapshotWriter] tb_site insert: siteName={}", siteName);
+                        evictCache("sites");
                         return siteRepository.save(Site.of(siteName));
                     });
 
@@ -59,6 +62,7 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
             Brand brand = brandRepository.findByBrandName(brandName)
                     .orElseGet(() -> {
                         log.info("[DbSnapshotWriter] tb_brand insert: brandName={}", brandName);
+                        evictCache("brands");
                         return brandRepository.save(Brand.of(brandName));
                     });
 
@@ -125,5 +129,10 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
             case 858 -> ModelType.DENIM_PANTS;
             default -> null;
         };
+    }
+
+    private void evictCache(String cacheName) {
+        var cache = cacheManager.getCache(cacheName);
+        if (cache != null) cache.clear();
     }
 }
