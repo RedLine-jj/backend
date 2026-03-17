@@ -52,6 +52,7 @@ dependencies {
 
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
 
 	// Rate Limiting (Bucket4j)
 	implementation 'com.bucket4j:bucket4j-core:8.10.1'
