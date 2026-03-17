@@ -73,7 +73,7 @@ public class ModeManJsonLdParser {
 
         // [수정] HTML 엔티티를 디코딩(unescape)하는 로직 추가
         String name = unescape(textOrNull(productNode.get("name")));
-        String brand = unescape(textOrNull(productNode.path("brand").path("name")));
+        String brand = toUpperOrNull(unescape(textOrNull(productNode.path("brand").path("name"))));
         String imageUrl = extractFirstImage(productNode.get("image"));
         JsonNode offersNode = productNode.get("offers");
 
@@ -125,7 +125,8 @@ public class ModeManJsonLdParser {
 
         String optionId = QueryParamExtractor.extract(offerUrl, "item_code");
         StockStatus stockStatus = mapAvailabilityToStatus(availability);
-        String optionLabel = extractOptionLabel(offerName, productName);
+        String optionLabel = com.jj.redline.common.util.OptionLabelNormalizer.normalize(
+                extractOptionLabel(offerName, productName));
 
         ProductOption option = ProductOption.builder()
                 .optionId(optionId)
@@ -270,6 +271,11 @@ public class ModeManJsonLdParser {
     private String unescape(String text) {
         if (isBlank(text)) return text;
         return Parser.unescapeEntities(text, false);
+    }
+
+    private String toUpperOrNull(String value) {
+        if (isBlank(value)) return null;
+        return value.toUpperCase(java.util.Locale.ROOT);
     }
 
     private boolean isBlank(String s) {
