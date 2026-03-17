@@ -9,6 +9,7 @@ import com.jj.redline.domain.repository.RestockNotificationRepository;
 import com.jj.redline.domain.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ public class RestockSubscriber implements MessageListener {
     private final SseEmitterService sseEmitterService;
 
     @Override
+    @CacheEvict(value = "restocks:recent", allEntries = true)
     @Transactional
     public void onMessage(Message message, byte[] pattern) {
         Long modelId = Long.parseLong(new String(message.getBody()));

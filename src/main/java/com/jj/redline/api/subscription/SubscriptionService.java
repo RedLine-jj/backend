@@ -12,6 +12,8 @@ import com.jj.redline.domain.repository.SubscriptionRepository;
 import com.jj.redline.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +53,7 @@ public class SubscriptionService {
         return subscriptionRepository.countByUser(user);
     }
 
+    @CacheEvict(value = "subscriptions:top", allEntries = true)
     @Transactional
     public void createSubscription(SubscriptionCreateRequest request) {
         User user = getCurrentUser();
@@ -64,6 +67,7 @@ public class SubscriptionService {
         subscriptionRepository.save(Subscription.of(user, model));
     }
 
+    @CacheEvict(value = "subscriptions:top", allEntries = true)
     @Transactional
     public void deleteSubscription(Long id) {
         User user = getCurrentUser();
@@ -73,6 +77,7 @@ public class SubscriptionService {
         subscriptionRepository.delete(subscription);
     }
 
+    @Cacheable(value = "subscriptions:top")
     public List<TopSubscriptionResponse> getTopSubscriptions() {
         List<Tuple> rows = subscriptionRepository.findTopSubscribedModels(10);
 

@@ -21,6 +21,7 @@ public class BatchScheduler {
 
     private final JobLauncher jobLauncher;
     private final Job modeManCrawlingJob;
+    private final Job semiBasementCrawlingJob;
 
     /**
      * 빠른 스케줄러: 20분 주기로 실행
@@ -29,7 +30,7 @@ public class BatchScheduler {
     public void runFastScheduledJob() {
         if (hasActiveSubscriptions()) {
             log.info("[FAST-SCHEDULER] 구독자가 있어 20분 주기로 크롤링을 실행합니다.");
-            runCrawlingJob("FAST_SCHEDULE");
+            runCrawlingJobs("FAST_SCHEDULE");
         } else {
             log.info("[FAST-SCHEDULER] 구독자가 없어 실행을 건너뜁니다.");
         }
@@ -42,7 +43,7 @@ public class BatchScheduler {
     public void runSlowScheduledJob() {
         if (!hasActiveSubscriptions()) {
             log.info("[SLOW-SCHEDULER] 구독자가 없어 1시간 주기로 크롤링을 실행합니다.");
-            runCrawlingJob("HOURLY_DEFAULT");
+            runCrawlingJobs("HOURLY_DEFAULT");
         } else {
             log.info("[SLOW-SCHEDULER] 구독자가 있으므로 빠른 스케줄러가 처리합니다. 실행을 건너뜁니다.");
         }
@@ -51,18 +52,40 @@ public class BatchScheduler {
     /**
      * 통합된 크롤링 잡을 한번만 실행하는 메소드
      */
-    private void runCrawlingJob(String trigger) {
+    private void runCrawlingJobs(String trigger) {
+        runModeManCrawlingJob(trigger);
+        runSemiBasementCrawlingJob(trigger);
+    }
+
+    private void runModeManCrawlingJob(String trigger) {
         try {
             JobParameters params = new JobParametersBuilder()
                     .addString("runDateTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                     .addString("trigger", trigger)
+                    .addString("site", "MODEMAN")
                     .toJobParameters();
 
-            log.info("Trigger: [{}]. 통합 크롤링 잡을 실행합니다.", trigger);
+            log.info("Trigger: [{}]. MODEMAN 크롤링 잡을 실행합니다.", trigger);
             jobLauncher.run(modeManCrawlingJob, params);
 
         } catch (Exception e) {
-            log.error("스케줄된 크롤링 잡 실행 실패 (Trigger: {})", trigger, e);
+            log.error("MODEMAN 크롤링 잡 실행 실패 (Trigger: {})", trigger, e);
+        }
+    }
+
+    private void runSemiBasementCrawlingJob(String trigger) {
+        try {
+            JobParameters params = new JobParametersBuilder()
+                    .addString("runDateTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                    .addString("trigger", trigger)
+                    .addString("site", "SEMI_BASEMENT")
+                    .toJobParameters();
+
+            log.info("Trigger: [{}]. SEMI_BASEMENT 크롤링 잡을 실행합니다.", trigger);
+            jobLauncher.run(semiBasementCrawlingJob, params);
+
+        } catch (Exception e) {
+            log.error("SEMI_BASEMENT 크롤링 잡 실행 실패 (Trigger: {})", trigger, e);
         }
     }
 

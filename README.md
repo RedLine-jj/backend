@@ -10,6 +10,8 @@
 | 데이터베이스 | MySQL, Redis |
 | ORM | JPA/Hibernate, QueryDSL |
 | 인증 | JWT |
+| 크롤링 | Spring Batch, Jsoup |
+| AI 모델 매칭 | Groq LLM (llama-3.3-70b) |
 | 실시간 알림 | Redis Pub/Sub, SSE (Server-Sent Events) |
 | Rate Limiting | Bucket4j (IP당 분당 60회) |
 | API 문서 | SpringDoc OpenAPI (Swagger) |
@@ -50,6 +52,92 @@
 }
 ```
 
+## 크롤링 아키텍처
+
+Spring Batch 기반으로 편집샵 사이트를 크롤링하여 상품/재고 데이터를 수집합니다.
+
+### 지원 사이트
+
+| 사이트 | 플랫폼 | 목록 파싱 | 상세 파싱 |
+|--------|--------|----------|----------|
+| ModeMan | Cafe24 | HTML (CSS 셀렉터) | JSON-LD |
+| SemiBasement | imweb | HTML (`data-product-properties` JSON) | OMS API (`/ajax/oms/OMS_get_products.cm`) |
+
+### 데이터 흐름
+
+```
+스케줄러 (20분 / 1시간)
+  ↓
+Reader: 카테고리별 목록 페이지 순회 → ProductBrief 수집
+  ↓
+Processor: 상세 페이지/API 호출 → ProductSnapshot 변환
+  ↓
+Writer (DbSnapshotWriter): DB upsert
+  ├─ 브랜드 매칭 (exact → alias → 정규화 → 생성)
+  ├─ 모델 매칭 (exact → alias → AI 매칭 → 생성/스킵)
+  ├─ 사이즈별 재고 upsert
+  └─ 재입고 감지 → Redis PUBLISH
+```
+
+### AI 모델 매칭
+
+사이트마다 같은 제품의 이름이 다른 문제를 AI(Groq LLM)로 해결합니다.
+
+**동작 원리:** 새 모델이 들어오면, 같은 브랜드의 **기존 모델 목록을 DB에서 조회**하여 AI에게 "이 중에 같은 제품 있어?"라고 질문합니다.
+
+```
+SemiBasement: "0105W Wide Denim" (FULLCOUNT) 들어옴
+  → DB 조회: FULLCOUNT 기존 모델 = ["0105W WIDE STRAIGHT DENIM", "1101 USED WASH...", ...]
+  → AI: "0105W WIDE STRAIGHT DENIM" 매칭 (confidence: 100%)
+  → tb_model_alias에 저장 → 다음부터 AI 호출 없이 alias로 바로 매칭
+```
+
+**매칭 우선순위:**
+
+| 순서 | 방법 | AI 호출 |
+|------|------|---------|
+| 1 | exact: 이름 완전 일치 | X |
+| 2 | alias: `tb_model_alias` 테이블 조회 | X |
+| 3 | AI: Groq LLM에 기존 모델 목록과 비교 요청 | O (최초 1회) |
+| 4 | 생성 또는 스킵 | X |
+
+**AI 실패 처리 (rate limit 등):**
+- AI 성공 + 매칭됨 → alias 저장, 기존 모델 사용
+- AI 성공 + 매칭 없음 → 새 모델 생성 (진짜 새 제품)
+- AI 실패 → 스킵, 다음 크롤링에서 재시도 (중복 모델 방지)
+
+**표준 이름:** 먼저 DB에 들어간 사이트의 이름이 표준이 됩니다. ModeMan을 먼저 크롤링하면 ModeMan 이름이 표준.
+
+### 브랜드 정규화
+
+사이트별 브랜드 표기 차이를 자동 + 수동으로 처리합니다.
+
+| 방법 | 예시 |
+|------|------|
+| exact | `FULLCOUNT` = `FULLCOUNT` |
+| alias (`tb_brand_alias`) | `SUGAR CANE & CO.` → SUGARCANE 브랜드 |
+| 정규화 (대문자 + 특수문자 제거) | `FULL COUNT` → `FULLCOUNT` 자동 매칭 |
+
+### 새 사이트 추가 방법
+
+1. `Site` enum에 새 값 추가
+2. `crawling/{site}/` 패키지에 HttpClient, ListParser, DetailParser 구현
+3. `batch/` 레이어에 Reader, Processor, BatchJobConfig 추가
+4. `BatchScheduler`에 Job 등록
+5. `DbSnapshotWriter.resolveModelType()`에 카테고리 매핑 추가
+
+### 수동 배치 실행
+
+```bash
+GROQ_API_KEY=your-key ./gradlew bootRun --args='--spring.profiles.active=manual-batch'
+```
+
+### 환경변수 (크롤링)
+
+```env
+GROQ_API_KEY=        # Groq API Key (AI 모델 매칭용)
+```
+
 ## 재입고 알림 아키텍처
 
 ```
@@ -82,6 +170,8 @@ DB_USERNAME=
 DB_PASSWORD=
 REDIS_HOST=redis
 REDIS_PORT=6379
+GROQ_API_KEY=          # Groq API Key (AI 모델 매칭)
+JWT_SECRET=            # JWT 서명 키
 ```
 
 ### API 문서

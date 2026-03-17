@@ -48,7 +48,7 @@ class MetaWriterTest {
         // 첫 번째 리포트 생성 및 쓰기
         MetaReport report1 = MetaReport.builder()
                 .site("MODEMAN")
-                .categoryCode(263)
+                .categoryCode("263")
                 .startedAt(testTime)
                 .finishedAt(testTime.plusSeconds(3))
                 .durationMs(3000L)
@@ -63,7 +63,7 @@ class MetaWriterTest {
         // 두 번째 리포트 생성 및 쓰기
         MetaReport report2 = MetaReport.builder()
                 .site("MODEMAN")
-                .categoryCode(858)
+                .categoryCode("858")
                 .startedAt(testTime.plusMinutes(1))
                 .finishedAt(testTime.plusMinutes(1).plusSeconds(5))
                 .durationMs(5000L)
