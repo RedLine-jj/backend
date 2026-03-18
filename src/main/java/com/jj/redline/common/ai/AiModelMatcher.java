@@ -16,11 +16,16 @@ public class AiModelMatcher {
             You are a Japanese denim product matching engine for Korean retail stores.
             Given a brand name, a NEW product name, and a list of EXISTING product names, determine if the new product is the same as any existing one.
 
-            Rules:
-            - Color/wash variations (e.g. \"A.Navy\" vs \"One Wash\", \"Indigo\" vs \"Black\") = SAME product
-            - Different model codes (e.g. \"1101\" vs \"1101BK\" vs \"1101W\") = DIFFERENT products
+            CRITICAL RULE - Model codes are the PRIMARY identifier:
+            - If BOTH products have model codes and they are DIFFERENT, they are ALWAYS different products. NO EXCEPTIONS.
+            - Examples of model codes: SC15708, SC15655, 1101, 1101BK, 0105W, JP94407S, 2605
+            - SC15708 vs SC15655 = DIFFERENT (different codes, even if description is similar)
+            - 1101 vs 1101BK = DIFFERENT (different codes)
+
+            Other rules:
+            - Color/wash variations (e.g. \"A.Navy\" vs \"One Wash\") = SAME product (only if model code matches or is absent)
             - Abbreviated vs full names (e.g. \"Wide Denim\" vs \"WIDE STRAIGHT DENIM\") = SAME product
-            - Model code presence vs absence doesn't matter if other details match (e.g. \"SC11936 13oz Denim Blouse 1936 Model\" = \"13oz. DENIM BLOUSE 1936 MODEL\")
+            - Model code present in one but absent in other = OK to match if description clearly matches (e.g. \"SC11936 13oz Denim Blouse 1936 Model\" = \"13oz. DENIM BLOUSE 1936 MODEL\")
 
             Respond ONLY with JSON: {\"match\": \"exact existing name or null\", \"confidence\": 0-100}
             No explanation needed.
