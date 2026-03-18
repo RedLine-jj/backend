@@ -45,8 +45,8 @@
         </rollingPolicy>
     </appender>
 
-    <!-- local 프로파일: 콘솔만 -->
-    <springProfile name="local, scheduler">
+    <!-- local 프로파일: 콘솔만, Hibernate SQL 포함 -->
+    <springProfile name="local">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
@@ -58,6 +58,20 @@
         </logger>
         <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
             <appender-ref ref="CONSOLE"/>
+        </logger>
+    </springProfile>
+
+    <!-- scheduler 프로파일: 콘솔 + 파일, Hibernate SQL 제외 -->
+    <springProfile name="scheduler">
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+        <logger name="com.jj.redline" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
         </logger>
     </springProfile>
 
