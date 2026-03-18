@@ -79,34 +79,49 @@ Writer (DbSnapshotWriter): DB upsert
   └─ 재입고 감지 → Redis PUBLISH
 ```
 
-### AI 모델 매칭
+### 크로스사이트 상품 동일성 매칭
 
-사이트마다 같은 제품의 이름이 다른 문제를 AI(Groq LLM)로 해결합니다.
+#### 문제
 
-**동작 원리:** 새 모델이 들어오면, 같은 브랜드의 **기존 모델 목록을 DB에서 조회**하여 AI에게 "이 중에 같은 제품 있어?"라고 질문합니다.
+여러 편집샵 사이트에서 같은 데님 제품을 다른 이름으로 판매하여 동일 상품 식별이 불가능했습니다.
+
+| 사이트 | 상품명 |
+|--------|--------|
+| ModeMan | `SC11936 13oz Denim Blouse 1936 Model A.Navy` |
+| SemiBasement | `13oz. DENIM BLOUSE 1936 MODEL (One Wash)` |
+
+모델코드 유무, 대소문자, 색상/워싱 표기가 사이트마다 달라 단순 문자열 비교로는 매칭이 불가능합니다.
+
+#### 해결: LLM 기반 매칭 + alias 캐싱
+
+새 모델이 들어오면, 같은 브랜드의 **타 사이트 기존 모델 목록을 DB에서 조회**하여 LLM에 "이 중에 같은 제품이 있는가?"를 질문합니다. 매칭 결과는 alias 테이블에 저장되어 이후 동일 상품은 LLM 호출 없이 즉시 매칭됩니다.
 
 ```
-SemiBasement: "0105W Wide Denim" (FULLCOUNT) 들어옴
+"0105W Wide Denim" (FULLCOUNT) 들어옴
   → DB 조회: FULLCOUNT 기존 모델 = ["0105W WIDE STRAIGHT DENIM", "1101 USED WASH...", ...]
-  → AI: "0105W WIDE STRAIGHT DENIM" 매칭 (confidence: 100%)
-  → tb_model_alias에 저장 → 다음부터 AI 호출 없이 alias로 바로 매칭
+  → LLM: "0105W WIDE STRAIGHT DENIM" 매칭 (confidence: 100%)
+  → alias 저장 → 다음부터 LLM 호출 없이 바로 매칭
 ```
 
-**매칭 우선순위:**
+**3단계 매칭 파이프라인:**
 
-| 순서 | 방법 | AI 호출 |
-|------|------|---------|
-| 1 | exact: 이름 완전 일치 | X |
-| 2 | alias: `tb_model_alias` 테이블 조회 | X |
-| 3 | AI: Groq LLM에 기존 모델 목록과 비교 요청 | O (최초 1회) |
-| 4 | 생성 또는 스킵 | X |
+| 순서 | 방법 | LLM 호출 | 설명 |
+|------|------|---------|------|
+| 1 | exact | X | 이름 완전 일치 |
+| 2 | alias | X | `tb_model_alias` 조회 (이전 LLM 매칭 결과 캐시) |
+| 3 | LLM | O (최초 1회) | 타 사이트 모델 목록과 비교, confidence ≥ 85% |
+| 4 | 생성/스킵 | X | 새 제품이면 생성, LLM 실패 시 스킵 후 재시도 |
 
-**AI 실패 처리 (rate limit 등):**
-- AI 성공 + 매칭됨 → alias 저장, 기존 모델 사용
-- AI 성공 + 매칭 없음 → 새 모델 생성 (진짜 새 제품)
-- AI 실패 → 스킵, 다음 크롤링에서 재시도 (중복 모델 방지)
+#### 최적화
 
-**표준 이름:** 먼저 DB에 들어간 사이트의 이름이 표준이 됩니다. ModeMan을 먼저 크롤링하면 ModeMan 이름이 표준.
+- **같은 사이트 내 비교 스킵** — 타 사이트 모델이 있을 때만 LLM 호출하여 불필요한 API 요청 제거
+- **alias 캐시 누적** — 크롤링 주기가 반복될수록 LLM 호출량이 점진적으로 0에 수렴
+- **rate limit 대응** — API 실패 시 해당 상품을 스킵하고 다음 크롤링에서 재시도 (중복 모델 방지)
+- **모델코드 우선 비교** — LLM 프롬프트에서 모델코드가 다르면 무조건 다른 제품으로 판단 (SC15708 ≠ SC15655)
+
+#### 표준 이름
+
+먼저 DB에 들어간 사이트의 이름이 표준이 됩니다. ModeMan을 먼저 크롤링하면 ModeMan 이름이 표준.
 
 ### 브랜드 정규화
 
@@ -179,26 +194,20 @@ JWT_SECRET=            # JWT 서명 키
 - Swagger UI: http://localhost:8081/swagger-ui.html
 - OpenAPI JSON: http://localhost:8081/api-docs
 
-## 배포
+## CI/CD
 
-배포 파일 구조:
+GitHub Actions로 자동화되어 있습니다.
+
+| 워크플로우 | 트리거 | 동작 |
+|-----------|--------|------|
+| CI | PR → main | `./gradlew build -x test` (빌드 검증) |
+| CD | push → main | JAR 빌드 → EC2 SCP 전송 → systemd 재시작 |
 
 ```
-/was/
-└── redline-0.0.1-SNAPSHOT.jar
-├── logs
-└── .env
+PR 생성 → CI 빌드 검증 → 머지 → CD 자동 배포
+                                    ├─ ./gradlew bootJar
+                                    ├─ scp → EC2
+                                    └─ systemctl restart redline
 ```
 
-배포 절차:
-
-```bash
-# 1. JAR 빌드
-./gradlew bootJar
-
-# 2. EC2로 전송
-scp build/libs/*.jar ec2-user@<EC2_IP>:/deploy/redline-backend/
-
-# 3. 서비스 재시작
-sudo systemctl restart redline
-```
+**인프라:** EC2 + Nginx + systemd
