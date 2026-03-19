@@ -61,6 +61,7 @@ Spring Batch 기반으로 편집샵 사이트를 크롤링하여 상품/재고 �
 | 사이트 | 플랫폼 | 목록 파싱 | 상세 파싱 |
 |--------|--------|----------|----------|
 | ModeMan | Cafe24 | HTML (CSS 셀렉터) | JSON-LD |
+| NestStore | Cafe24 | HTML (CSS 셀렉터) | JSON-LD |
 | SemiBasement | imweb | HTML (`data-product-properties` JSON) | OMS API (`/ajax/oms/OMS_get_products.cm`) |
 
 ### 데이터 흐름
@@ -135,16 +136,26 @@ Writer (DbSnapshotWriter): DB upsert
 
 ### 새 사이트 추가 방법
 
+**Cafe24 플랫폼 사이트** (ModeMan, NestStore와 동일 구조):
 1. `Site` enum에 새 값 추가
-2. `crawling/{site}/` 패키지에 HttpClient, ListParser, DetailParser 구현
-3. `batch/` 레이어에 Reader, Processor, BatchJobConfig 추가
-4. `BatchScheduler`에 Job 등록
+2. `crawling/config/`에 `XxxSiteConfig implements CrawlSiteConfig` 추가 (도메인, 카테고리, URL 템플릿)
+3. `batch/config/`에 `XxxBatchJobConfig` 추가 (공통 Cafe24 Reader/Processor 빈 생성)
+4. `batch/runner/`에 `XxxBatchRunner` 추가 + `BatchScheduler`에 Job 등록
+5. `DbSnapshotWriter.resolveModelType()`에 카테고리 매핑 추가
+
+**새 플랫폼 사이트** (SemiBasement처럼 다른 플랫폼):
+1. `Site` enum에 새 값 추가
+2. `crawling/{platform}/`에 HttpClient, ListParser, DetailParser 구현
+3. `crawling/config/`에 `XxxSiteConfig implements CrawlSiteConfig` 추가
+4. `batch/`에 Reader, Processor, BatchJobConfig, BatchRunner 추가 + 스케줄러 등록
 5. `DbSnapshotWriter.resolveModelType()`에 카테고리 매핑 추가
 
 ### 수동 배치 실행
 
 ```bash
-GROQ_API_KEY=your-key ./gradlew bootRun --args='--spring.profiles.active=manual-batch'
+./gradlew bootRun --args='--batch.run.modeman=true'       # ModeMan
+./gradlew bootRun --args='--batch.run.neststore=true'      # NestStore
+./gradlew bootRun --args='--batch.run.semibasement=true'   # SemiBasement
 ```
 
 ### 환경변수 (크롤링)
