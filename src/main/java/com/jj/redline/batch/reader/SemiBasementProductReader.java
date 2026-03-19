@@ -17,8 +17,10 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -87,17 +89,28 @@ public class SemiBasementProductReader implements ItemReader<ProductBrief>, Step
 
         categoriesToCrawl.parallelStream().forEach(category -> {
             int page = 1;
+            Set<String> previousPageKeys = new HashSet<>();
             while (true) {
                 String listUrl = String.format(LIST_URL_TEMPLATE, category.code(), page);
                 try {
-                    log.info("Fetching product list for category: {} (URL: {})", category.name(), listUrl);
+                    log.debug("Fetching product list for category: {} (URL: {})", category.name(), listUrl);
                     String html = httpClient.getHtml(listUrl);
                     ListParseResult parseResult = listParser.parse(html);
 
                     if (parseResult.getProductBriefs().isEmpty()) {
-                        log.info("No more products found for category: {} at page: {}", category.name(), page);
+                        log.debug("No more products found for category: {} at page: {}", category.name(), page);
                         break;
                     }
+
+                    Set<String> currentPageKeys = parseResult.getProductBriefs().stream()
+                            .map(ProductBrief::getProductKey)
+                            .collect(Collectors.toSet());
+
+                    if (currentPageKeys.equals(previousPageKeys)) {
+                        log.info("Duplicate page detected for category: {} at page: {}. Stopping.", category.name(), page);
+                        break;
+                    }
+                    previousPageKeys = currentPageKeys;
 
                     CategoryDto categoryDto = new CategoryDto(Long.parseLong(category.code()), category.name());
 
@@ -110,7 +123,7 @@ public class SemiBasementProductReader implements ItemReader<ProductBrief>, Step
                             .collect(Collectors.toList());
 
                     allProductBriefs.addAll(briefsWithCategory);
-                    log.info("Fetched {} products from URL: {}", briefsWithCategory.size(), listUrl);
+                    log.debug("Fetched {} products from URL: {}", briefsWithCategory.size(), listUrl);
                     page++;
                 } catch (Exception e) {
                     log.error("Failed to fetch product list for category: {} (URL: {})", category.name(), listUrl, e);

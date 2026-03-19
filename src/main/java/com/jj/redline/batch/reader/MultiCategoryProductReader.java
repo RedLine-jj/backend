@@ -5,8 +5,10 @@ import com.jj.redline.crawling.modeman.list.ListParseResult;
 import com.jj.redline.crawling.modeman.list.ModeManListParser;
 import com.jj.redline.domain.dto.CategoryDto;
 import com.jj.redline.domain.dto.ProductBrief;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -81,32 +83,42 @@ public class MultiCategoryProductReader implements ItemReader<ProductBrief>, Ste
 
         categoriesToCrawl.parallelStream().forEach(category -> {
             int page = 1;
+            Set<String> previousPageKeys = new HashSet<>();
             while (true) {
                 String listUrl = String.format(LIST_URL_TEMPLATE, category.code(), page);
                 try {
-                    log.info("Fetching product list for category: {} (URL: {})", category.name(), listUrl);
+                    log.debug("Fetching product list for category: {} (URL: {})", category.name(), listUrl);
                     String html = httpClient.get(listUrl);
                     ListParseResult parseResult = listParser.parse(html);
 
                     if (parseResult.getProductBriefs().isEmpty()) {
-                        log.info("No more products found for category: {} at page: {}", category.name(), page);
-                        break; // 더 이상 상품이 없으면 중단
+                        log.debug("No more products found for category: {} at page: {}", category.name(), page);
+                        break;
                     }
+
+                    Set<String> currentPageKeys = parseResult.getProductBriefs().stream()
+                            .map(ProductBrief::getProductKey)
+                            .collect(Collectors.toSet());
+
+                    if (currentPageKeys.equals(previousPageKeys)) {
+                        log.info("Duplicate page detected for category: {} at page: {}. Stopping.", category.name(), page);
+                        break;
+                    }
+                    previousPageKeys = currentPageKeys;
 
                     CategoryDto categoryDto = new CategoryDto(Long.parseLong(category.code()), category.name());
 
-                    // 각 ProductBrief 객체에 현재 크롤링 중인 카테고리 정보를 설정합니다.
                     List<ProductBrief> briefsWithCategory = parseResult.getProductBriefs().stream()
                             .map(brief -> brief.toBuilder().category(categoryDto).build())
                             .collect(Collectors.toList());
 
                     allProductBriefs.addAll(briefsWithCategory);
-                    log.info("Fetched {} products from URL: {}", briefsWithCategory.size(), listUrl);
+                    log.debug("Fetched {} products from URL: {}", briefsWithCategory.size(), listUrl);
 
-                    page++; // 다음 페이지로 이동
+                    page++;
                 } catch (Exception e) {
                     log.error("Failed to fetch product list for category: {} (URL: {})", category.name(), listUrl, e);
-                    break; // 에러 발생 시 해당 카테고리 페이지네이션 중단
+                    break;
                 }
             }
         });
