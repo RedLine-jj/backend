@@ -22,10 +22,14 @@ public class AiModelMatcher {
             - SC15708 vs SC15655 = DIFFERENT (different codes, even if description is similar)
             - 1101 vs 1101BK = DIFFERENT (different codes)
 
-            Other rules:
+            Product variant rules - these are DIFFERENT products (separate model codes):
+            - \"Aged Model\" / \"Aged\" suffix = DIFFERENT product (e.g. \"Work Coat\" vs \"Work Coat Aged Model\" = DIFFERENT)
+            - Different garment types = DIFFERENT (e.g. \"Work Coat\" vs \"Chore Coat\" = DIFFERENT)
+
+            Same product rules:
             - Color/wash variations (e.g. \"A.Navy\" vs \"One Wash\") = SAME product (only if model code matches or is absent)
             - Abbreviated vs full names (e.g. \"Wide Denim\" vs \"WIDE STRAIGHT DENIM\") = SAME product
-            - Model code present in one but absent in other = OK to match if description clearly matches (e.g. \"SC11936 13oz Denim Blouse 1936 Model\" = \"13oz. DENIM BLOUSE 1936 MODEL\")
+            - Model code present in one but absent in other = OK to match ONLY if description is nearly identical (e.g. \"SC11936 13oz Denim Blouse 1936 Model\" = \"13oz. DENIM BLOUSE 1936 MODEL\")
 
             Respond ONLY with JSON: {\"match\": \"exact existing name or null\", \"confidence\": 0-100}
             No explanation needed.
