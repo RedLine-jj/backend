@@ -21,6 +21,7 @@ public class BatchScheduler {
 
     private final JobLauncher jobLauncher;
     private final Job modeManCrawlingJob;
+    private final Job nestStoreCrawlingJob;
     private final Job semiBasementCrawlingJob;
 
     /**
@@ -54,6 +55,7 @@ public class BatchScheduler {
      */
     private void runCrawlingJobs(String trigger) {
         runModeManCrawlingJob(trigger);
+        runNestStoreCrawlingJob(trigger);
         runSemiBasementCrawlingJob(trigger);
     }
 
@@ -86,6 +88,22 @@ public class BatchScheduler {
 
         } catch (Exception e) {
             log.error("SEMI_BASEMENT 크롤링 잡 실행 실패 (Trigger: {})", trigger, e);
+        }
+    }
+
+    private void runNestStoreCrawlingJob(String trigger) {
+        try {
+            JobParameters params = new JobParametersBuilder()
+                    .addString("runDateTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                    .addString("trigger", trigger)
+                    .addString("site", "NEST_STORE")
+                    .toJobParameters();
+
+            log.info("Trigger: [{}]. NEST_STORE 크롤링 잡을 실행합니다.", trigger);
+            jobLauncher.run(nestStoreCrawlingJob, params);
+
+        } catch (Exception e) {
+            log.error("NEST_STORE 크롤링 잡 실행 실패 (Trigger: {})", trigger, e);
         }
     }
 
