@@ -1,6 +1,7 @@
 package com.jj.redline.domain.entity;
 
 import com.jj.redline.domain.entity.base.BaseEntity;
+import com.jj.redline.domain.enums.ModelType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

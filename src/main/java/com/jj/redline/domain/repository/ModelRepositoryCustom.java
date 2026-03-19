@@ -2,7 +2,7 @@ package com.jj.redline.domain.repository;
 
 import com.jj.redline.domain.entity.Model;
 
-import com.jj.redline.domain.entity.ModelType;
+import com.jj.redline.domain.enums.ModelType;
 
 import java.util.List;
 

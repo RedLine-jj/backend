@@ -1,9 +1,9 @@
-package com.jj.redline.crawling.semibasement.list;
+package com.jj.redline.crawling.imweb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jj.redline.crawling.modeman.list.ListParseResult;
-import com.jj.redline.domain.dto.ProductBrief;
+import com.jj.redline.domain.dto.crawl.ListParseResult;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,13 +14,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SemiBasementListParser {
+public class ImwebListParser {
 
     private static final String PRODUCT_SELECTOR = "div[data-product-properties]";
 
     private final ObjectMapper objectMapper;
 
-    public SemiBasementListParser(ObjectMapper objectMapper) {
+    public ImwebListParser(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -75,7 +75,6 @@ public class SemiBasementListParser {
             }
 
             ProductBrief brief = ProductBrief.builder()
-                    .site("SEMI_BASEMENT")
                     .productKey(String.valueOf(idx))
                     .name(name)
                     .imageUrl(imageUrl)

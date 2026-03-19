@@ -1,13 +1,13 @@
 package com.jj.redline.batch.output;
 
 import com.jj.redline.common.ai.AiModelMatcher;
-import com.jj.redline.domain.dto.ProductOption;
-import com.jj.redline.domain.dto.ProductSnapshot;
-import com.jj.redline.domain.dto.StockStatus;
+import com.jj.redline.domain.dto.crawl.ProductOption;
+import com.jj.redline.domain.dto.crawl.ProductSnapshot;
+import com.jj.redline.domain.enums.StockStatus;
 import com.jj.redline.domain.entity.Brand;
 import com.jj.redline.domain.entity.Model;
 import com.jj.redline.domain.entity.ModelAlias;
-import com.jj.redline.domain.entity.ModelType;
+import com.jj.redline.domain.enums.ModelType;
 import com.jj.redline.domain.entity.Site;
 import com.jj.redline.domain.entity.SiteOption;
 import com.jj.redline.domain.entity.SiteOptionLog;
@@ -141,6 +141,8 @@ public class DbSnapshotWriter implements ItemWriter<ProductSnapshot> {
         return switch ((int) snapshot.getCategory().getCode()) {
             case 263 -> ModelType.DENIM_JACKET;
             case 858 -> ModelType.DENIM_PANTS;
+            case 230 -> ModelType.DENIM_JACKET;
+            case 34 -> ModelType.DENIM_PANTS;
             case 89 -> ModelType.DENIM_PANTS;
             case 93 -> ModelType.DENIM_JACKET;
             default -> null;

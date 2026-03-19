@@ -1,4 +1,4 @@
-package com.jj.redline.domain.dto;
+package com.jj.redline.domain.enums;
 
 /**
  * 상세 파싱 결과 상태.

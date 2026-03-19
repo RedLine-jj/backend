@@ -1,67 +1,58 @@
 package com.jj.redline.batch.reader;
 
-import com.jj.redline.crawling.modeman.ModeManHttpClient;
-import com.jj.redline.crawling.modeman.list.ListParseResult;
-import com.jj.redline.crawling.modeman.list.ModeManListParser;
-import com.jj.redline.domain.dto.CategoryDto;
-import com.jj.redline.domain.dto.ProductBrief;
+import com.jj.redline.crawling.cafe24.Cafe24HttpClient;
+import com.jj.redline.crawling.cafe24.Cafe24ListParser;
+import com.jj.redline.domain.dto.crawl.CrawlSiteConfig;
+import com.jj.redline.domain.dto.crawl.ListParseResult;
+import com.jj.redline.domain.dto.crawl.CategoryDto;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemReader;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
-@StepScope
-@RequiredArgsConstructor
-public class MultiCategoryProductReader implements ItemReader<ProductBrief>, StepExecutionListener {
+public class Cafe24ProductReader implements ItemReader<ProductBrief>, StepExecutionListener {
 
-    // 크롤링할 카테고리 정보를 담는 내부 클래스
-    private record CategoryToCrawl(String code, String name) {}
-
-    private final ModeManHttpClient httpClient;
-    private final ModeManListParser listParser;
-
-    // 크롤링할 카테고리 목록
-    private final List<CategoryToCrawl> categoriesToCrawl = List.of(
-            new CategoryToCrawl("263", "Denim Jackets"),
-            new CategoryToCrawl("858", "Denim Pants")
-    );
-
-    private static final String LIST_URL_TEMPLATE = "https://mode-man.com/product/list.html?cate_no=%s&page=%d";
+    private final CrawlSiteConfig siteConfig;
+    private final Cafe24HttpClient httpClient;
+    private final Cafe24ListParser listParser;
 
     private Iterator<ProductBrief> productBriefIterator;
 
+    public Cafe24ProductReader(CrawlSiteConfig siteConfig, Cafe24HttpClient httpClient, Cafe24ListParser listParser) {
+        this.siteConfig = siteConfig;
+        this.httpClient = httpClient;
+        this.listParser = listParser;
+    }
+
     @Override
     public void beforeStep(StepExecution stepExecution) {
-        log.info("Initializing MultiCategoryProductReader: Fetching all product briefs...");
+        log.info("Initializing Cafe24ProductReader: Fetching all product briefs for {}...", siteConfig.getSite());
         ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
 
-        String categoryNames = categoriesToCrawl.stream()
-                .map(CategoryToCrawl::name)
+        String categoryNames = siteConfig.getCategories().stream()
+                .map(CrawlSiteConfig.CategoryToCrawl::name)
                 .collect(Collectors.joining(", "));
         jobExecutionContext.putString("crawledCategoryNames", categoryNames);
 
-        String categoryCodes = categoriesToCrawl.stream()
-                .map(CategoryToCrawl::code)
+        String categoryCodes = siteConfig.getCategories().stream()
+                .map(CrawlSiteConfig.CategoryToCrawl::code)
                 .collect(Collectors.joining(", "));
         jobExecutionContext.putString("crawledCategoryCodes", categoryCodes);
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        // do nothing
         return null;
     }
 
@@ -73,19 +64,18 @@ public class MultiCategoryProductReader implements ItemReader<ProductBrief>, Ste
 
         if (productBriefIterator.hasNext()) {
             return productBriefIterator.next();
-        } else {
-            return null;
         }
+        return null;
     }
 
     private void initialize() {
         List<ProductBrief> allProductBriefs = new CopyOnWriteArrayList<>();
 
-        categoriesToCrawl.parallelStream().forEach(category -> {
+        siteConfig.getCategories().parallelStream().forEach(category -> {
             int page = 1;
             Set<String> previousPageKeys = new HashSet<>();
             while (true) {
-                String listUrl = String.format(LIST_URL_TEMPLATE, category.code(), page);
+                String listUrl = String.format(siteConfig.getListUrlTemplate(), category.code(), page);
                 try {
                     log.debug("Fetching product list for category: {} (URL: {})", category.name(), listUrl);
                     String html = httpClient.get(listUrl);
@@ -114,7 +104,6 @@ public class MultiCategoryProductReader implements ItemReader<ProductBrief>, Ste
 
                     allProductBriefs.addAll(briefsWithCategory);
                     log.debug("Fetched {} products from URL: {}", briefsWithCategory.size(), listUrl);
-
                     page++;
                 } catch (Exception e) {
                     log.error("Failed to fetch product list for category: {} (URL: {})", category.name(), listUrl, e);
@@ -123,7 +112,7 @@ public class MultiCategoryProductReader implements ItemReader<ProductBrief>, Ste
             }
         });
 
-        log.info("Total products fetched from all categories: {}", allProductBriefs.size());
+        log.info("Total products fetched from all categories for {}: {}", siteConfig.getSite(), allProductBriefs.size());
         this.productBriefIterator = allProductBriefs.iterator();
     }
 }

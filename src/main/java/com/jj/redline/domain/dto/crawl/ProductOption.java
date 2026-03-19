@@ -1,6 +1,7 @@
-package com.jj.redline.domain.dto;
+package com.jj.redline.domain.dto.crawl;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jj.redline.domain.enums.StockStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
