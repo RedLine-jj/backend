@@ -58,7 +58,10 @@ public class ImwebHttpClient {
             }
 
             return response.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("HTTP request interrupted: " + encodedUrl, e);
+        } catch (IOException e) {
             throw new RuntimeException("HTTP request failed: " + encodedUrl, e);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);
@@ -133,7 +136,10 @@ public class ImwebHttpClient {
             }
 
             return response.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("HTTP request interrupted: " + url, e);
+        } catch (IOException e) {
             throw new RuntimeException("HTTP request failed: " + url, e);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);

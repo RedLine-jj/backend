@@ -3,7 +3,7 @@ package com.jj.redline.batch.reader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jj.redline.domain.dto.crawl.ListParseResult;
 import com.jj.redline.crawling.imweb.ImwebHttpClient;
-import com.jj.redline.domain.dto.crawl.CrawlSiteConfig;
+import com.jj.redline.crawling.config.SemiBasementSiteConfig;
 import com.jj.redline.domain.dto.crawl.CrawlSiteConfig.CategoryToCrawl;
 import com.jj.redline.crawling.imweb.ImwebListParser;
 import com.jj.redline.domain.dto.crawl.CategoryDto;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class SemiBasementProductReader implements ItemReader<ProductBrief>, StepExecutionListener {
 
     private final ImwebHttpClient httpClient;
-    private final CrawlSiteConfig siteConfig;
+    private final SemiBasementSiteConfig siteConfig;
     private final ObjectMapper objectMapper;
 
     private ImwebListParser listParser;

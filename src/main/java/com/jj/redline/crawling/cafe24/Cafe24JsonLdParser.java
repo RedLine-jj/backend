@@ -83,10 +83,10 @@ public class Cafe24JsonLdParser {
         Long jsonLdPrice = extractPriceFromOffers(offersNode);
 
         if (isBlank(name) && brief != null) {
-            name = brief.getName();
+            name = cleanProductName(brief.getName());
         }
         if (isBlank(brand) && brief != null) {
-            brand = brief.getBrand();
+            brand = toUpperOrNull(brief.getBrand());
         }
         if (isBlank(imageUrl) && brief != null) {
             imageUrl = brief.getImageUrl();

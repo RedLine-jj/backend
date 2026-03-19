@@ -76,12 +76,22 @@ public class Cafe24ListParser {
         Long price = extractPrice(card);
 
         return ProductBrief.builder()
+                .productKey(extractProductId(url))
                 .url(url)
                 .imageUrl(imageUrl)
                 .name(blankToNull(Cafe24JsonLdParser.cleanProductName(name)))
                 .brand(blankToNull(brand))
                 .price(price)
                 .build();
+    }
+
+    private static final java.util.regex.Pattern PRODUCT_ID_PATTERN =
+            java.util.regex.Pattern.compile("/product/[^/]+/(\\d+)/");
+
+    private String extractProductId(String url) {
+        if (isBlank(url)) return null;
+        java.util.regex.Matcher m = PRODUCT_ID_PATTERN.matcher(url);
+        return m.find() ? m.group(1) : null;
     }
 
     private boolean isProductDetailUrl(String url) {
