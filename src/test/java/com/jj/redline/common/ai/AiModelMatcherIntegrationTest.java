@@ -110,6 +110,41 @@ class AiModelMatcherIntegrationTest {
     }
 
     @Test
+    void sugarcane_different_code_SC15708_vs_SC15655_should_not_match() {
+        assumeTrue(enabled && matcher != null, "skipped: add -Dit=true and GROQ_API_KEY env");
+
+        var result = matcher.findMatch(
+                "SUGARCANE",
+                "[ SC15708 ] 11oz. Blue Denim Work Coat Aged Model",
+                List.of(
+                        "SC15655 A.Navy 11oz Blue Denim Work Coat",
+                        "SC14966 11oz Blue Denim Chore Coat",
+                        "SC41947 DENIM JACKET 1953 Model",
+                        "[ SC15655 ] 11oz. Blue Denim Work Coat"
+                )
+        );
+
+        assertThat(result.status()).isEqualTo(MatchStatus.NO_MATCH);
+    }
+
+    @Test
+    void sugarcane_aged_model_without_code_should_not_match() {
+        assumeTrue(enabled && matcher != null, "skipped: add -Dit=true and GROQ_API_KEY env");
+
+        var result = matcher.findMatch(
+                "SUGARCANE",
+                "[ SC15708 ] 11oz. Blue Denim Work Coat Aged Model",
+                List.of(
+                        "SC15655 A.Navy 11oz Blue Denim Work Coat",
+                        "SC14966 11oz Blue Denim Chore Coat",
+                        "SC41947 DENIM JACKET 1953 Model"
+                )
+        );
+
+        assertThat(result.status()).isEqualTo(MatchStatus.NO_MATCH);
+    }
+
+    @Test
     void fullcount_completely_different_should_not_match() {
         assumeTrue(enabled && matcher != null, "skipped: add -Dit=true and GROQ_API_KEY env");
 
