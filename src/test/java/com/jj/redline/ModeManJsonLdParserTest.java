@@ -1,8 +1,9 @@
 package com.jj.redline;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jj.redline.crawling.modeman.detail.ModeManJsonLdParser;
-import com.jj.redline.domain.dto.*;
+import com.jj.redline.crawling.cafe24.Cafe24JsonLdParser;
+import com.jj.redline.domain.dto.crawl.*;
+import com.jj.redline.domain.enums.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -16,7 +17,7 @@ public class ModeManJsonLdParserTest {
     @Test
     void parse_success_offersArray() {
         ObjectMapper om = new ObjectMapper();
-        ModeManJsonLdParser parser = new ModeManJsonLdParser(om);
+        Cafe24JsonLdParser parser = new Cafe24JsonLdParser(om);
 
         String html = """
             <html><head></head><body>
