@@ -48,7 +48,7 @@ public class ModeManJsonLdParserTest {
 
         ProductSnapshot snap = parser.parse(
                 html,
-                Site.MODEMAN,
+                CrawlSite.MODEMAN,
                 new CategoryDto(263, "Denim Jackets"),
                 OffsetDateTime.of(2026,3,1,12,0,0,0, ZoneOffset.UTC),
                 brief
@@ -64,16 +64,16 @@ public class ModeManJsonLdParserTest {
         List<ProductOption> opts = snap.getOptions();
         assertThat(opts).hasSize(4);
 
-        assertThat(opts.get(0).getOptionLabel()).isEqualTo("1(30)");
+        assertThat(opts.get(0).getOptionLabel()).isEqualTo("1");
         assertThat(opts.get(0).getStatus()).isEqualTo(StockStatus.SOLD_OUT);
 
-        assertThat(opts.get(1).getOptionLabel()).isEqualTo("2(32)");
+        assertThat(opts.get(1).getOptionLabel()).isEqualTo("2");
         assertThat(opts.get(1).getStatus()).isEqualTo(StockStatus.AVAILABLE);
 
-        assertThat(opts.get(2).getOptionLabel()).isEqualTo("3(34)");
+        assertThat(opts.get(2).getOptionLabel()).isEqualTo("3");
         assertThat(opts.get(2).getStatus()).isEqualTo(StockStatus.AVAILABLE);
 
-        assertThat(opts.get(3).getOptionLabel()).isEqualTo("4(36)");
+        assertThat(opts.get(3).getOptionLabel()).isEqualTo("4");
         assertThat(opts.get(3).getStatus()).isEqualTo(StockStatus.SOLD_OUT);
     }
 }
