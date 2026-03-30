@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductSnapshot {
-    private Site site;               // "MODEMAN"
+    private CrawlSite site;               // "MODEMAN"
     private CategoryDto category;      // {code, name}
 
     private String brand;              // JSON-LD brand.name

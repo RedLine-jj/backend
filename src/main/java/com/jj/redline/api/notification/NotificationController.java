@@ -2,14 +2,11 @@ package com.jj.redline.api.notification;
 
 import com.jj.redline.common.ApiResponse;
 import com.jj.redline.domain.dto.notification.NotificationResponse;
-import com.jj.redline.domain.entity.User;
-import com.jj.redline.domain.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -23,14 +20,11 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final SseEmitterService sseEmitterService;
-    private final UserRepository userRepository;
 
     @Operation(summary = "SSE 알림 스트림 연결")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream() {
-        User user = getCurrentUser();
-        return sseEmitterService.connect(user.getId());
+        return notificationService.connectStream();
     }
 
     @Operation(summary = "알림 목록 조회")
@@ -57,11 +51,5 @@ public class NotificationController {
     public ApiResponse<Void> markAllAsRead() {
         notificationService.markAllAsRead();
         return ApiResponse.ok();
-    }
-
-    private User getCurrentUser() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 }

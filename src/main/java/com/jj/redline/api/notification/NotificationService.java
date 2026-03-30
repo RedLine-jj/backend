@@ -1,15 +1,16 @@
 package com.jj.redline.api.notification;
 
+import com.jj.redline.common.auth.CurrentUserService;
 import com.jj.redline.domain.dto.notification.NotificationResponse;
 import com.jj.redline.domain.entity.Model;
 import com.jj.redline.domain.entity.RestockNotification;
 import com.jj.redline.domain.entity.User;
 import com.jj.redline.domain.repository.RestockNotificationRepository;
-import com.jj.redline.domain.repository.UserRepository;
+import com.jj.redline.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -20,12 +21,19 @@ public class NotificationService {
 
     private final RestockNotificationRepository restockNotificationRepository;
     private final NotificationRedisService notificationRedisService;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+    private final SseEmitterService sseEmitterService;
+    private final NotificationResponseMapper notificationResponseMapper;
+
+    public SseEmitter connectStream() {
+        User user = getCurrentUser();
+        return sseEmitterService.connect(user.getId());
+    }
 
     public List<NotificationResponse> getNotifications() {
         User user = getCurrentUser();
         return restockNotificationRepository.findByUserOrderByIdDesc(user).stream()
-                .map(this::toResponse)
+                .map(notificationResponseMapper::toResponse)
                 .toList();
     }
 
@@ -38,7 +46,7 @@ public class NotificationService {
     public void markAsRead(Long id) {
         User user = getCurrentUser();
         RestockNotification notification = restockNotificationRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("알림을 찾을 수 없습니다."));
 
         if (!notification.getReadYn()) {
             notification.markAsRead();
@@ -56,21 +64,6 @@ public class NotificationService {
     }
 
     private User getCurrentUser() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-    }
-
-    private NotificationResponse toResponse(RestockNotification notification) {
-        Model model = notification.getModel();
-        return new NotificationResponse(
-                notification.getId(),
-                model.getId(),
-                model.getBrand().getBrandName(),
-                model.getModelName(),
-                model.getImageUrl(),
-                notification.getReadYn(),
-                notification.getCreatedAt()
-        );
+        return currentUserService.getCurrentUser();
     }
 }

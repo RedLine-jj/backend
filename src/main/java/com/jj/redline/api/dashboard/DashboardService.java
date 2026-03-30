@@ -6,6 +6,7 @@ import com.jj.redline.domain.entity.SiteOption;
 import com.jj.redline.domain.repository.ModelRepository;
 import com.jj.redline.domain.repository.SiteOptionLogRepository;
 import com.jj.redline.domain.repository.SiteOptionRepository;
+import com.jj.redline.exception.NotFoundException;
 import com.querydsl.core.Tuple;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class DashboardService {
 
     public PriceComparisonResponse getPriceComparison(Long modelId) {
         Model model = modelRepository.findById(modelId)
-                .orElseThrow(() -> new RuntimeException("Model not found: " + modelId));
+                .orElseThrow(() -> new NotFoundException("Model not found: " + modelId));
 
         List<SiteOption> siteOptions = siteOptionRepository.findAllByModelIdWithSite(modelId);
 

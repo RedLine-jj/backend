@@ -3,11 +3,11 @@ package com.jj.redline.crawling.semibasement.detail;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jj.redline.domain.dto.CategoryDto;
+import com.jj.redline.domain.dto.CrawlSite;
 import com.jj.redline.domain.dto.ParseStatus;
 import com.jj.redline.domain.dto.ProductBrief;
 import com.jj.redline.domain.dto.ProductOption;
 import com.jj.redline.domain.dto.ProductSnapshot;
-import com.jj.redline.domain.dto.Site;
 import com.jj.redline.domain.dto.StockStatus;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,7 @@ public class SemiBasementDetailParser {
 
     public ProductSnapshot parse(
             String omsJson,
-            Site site,
+            CrawlSite site,
             CategoryDto category,
             OffsetDateTime capturedAt,
             ProductBrief brief
@@ -165,7 +165,7 @@ public class SemiBasementDetailParser {
         return options;
     }
 
-    private ProductSnapshot failSnapshot(Site site, CategoryDto category, OffsetDateTime capturedAt, ProductBrief brief, String reason) {
+    private ProductSnapshot failSnapshot(CrawlSite site, CategoryDto category, OffsetDateTime capturedAt, ProductBrief brief, String reason) {
         return ProductSnapshot.builder()
                 .site(site)
                 .category(category)

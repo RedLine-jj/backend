@@ -1,6 +1,6 @@
 package com.jj.redline.domain.dto;
 
-public enum Site {
+public enum CrawlSite {
     MODEMAN,
     SEMI_BASEMENT
 }

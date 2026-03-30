@@ -4,9 +4,9 @@ import com.jj.redline.common.util.TimeUtil;
 import com.jj.redline.crawling.modeman.ModeManHttpClient;
 import com.jj.redline.crawling.modeman.detail.ModeManJsonLdParser;
 import com.jj.redline.domain.dto.CategoryDto;
+import com.jj.redline.domain.dto.CrawlSite;
 import com.jj.redline.domain.dto.ProductBrief;
 import com.jj.redline.domain.dto.ProductSnapshot;
-import com.jj.redline.domain.dto.Site;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
@@ -31,7 +31,7 @@ public class ModeManDetailCrawlingProcessor implements ItemProcessor<ProductBrie
         String html = modeManHttpClient.get(productUrl);
 
         // 3. Parser에 전달할 인자들 준비
-        final Site site = Site.MODEMAN;
+        final CrawlSite site = CrawlSite.MODEMAN;
         // [수정] Job 파라미터 대신, Item으로 전달받은 ProductBrief에서 카테고리 정보를 가져옵니다.
         final CategoryDto category = item.getCategory();
         final OffsetDateTime capturedAt = TimeUtil.nowUtc(); // 크롤링 시각

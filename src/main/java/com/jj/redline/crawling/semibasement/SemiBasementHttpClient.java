@@ -2,6 +2,8 @@ package com.jj.redline.crawling.semibasement;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jj.redline.exception.BadRequestException;
+import com.jj.redline.exception.CrawlingException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -54,20 +56,20 @@ public class SemiBasementHttpClient {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             int code = response.statusCode();
             if (code < 200 || code >= 300) {
-                throw new RuntimeException("HTTP error: " + code + " url=" + encodedUrl);
+                throw new CrawlingException("HTTP error: " + code + " url=" + encodedUrl);
             }
 
             return response.body();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("HTTP request failed: " + encodedUrl, e);
+            throw new CrawlingException("HTTP request failed: " + encodedUrl, e);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);
+            throw new CrawlingException("Invalid request: " + url + " msg=" + e.getMessage(), e);
         }
     }
 
     public String getProductDetails(List<Integer> idxList, String refererUrl) {
         if (idxList == null || idxList.isEmpty()) {
-            throw new IllegalArgumentException("idxList must not be empty");
+            throw new BadRequestException("idxList must not be empty");
         }
 
         List<JsonNode> mergedData = new ArrayList<>();
@@ -92,7 +94,7 @@ public class SemiBasementHttpClient {
                     }
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Failed to parse OMS response: " + responseBody, e);
+                throw new CrawlingException("Failed to parse OMS response: " + responseBody, e);
             }
         }
 
@@ -102,7 +104,7 @@ public class SemiBasementHttpClient {
                     .set("data", objectMapper.valueToTree(mergedData));
             return objectMapper.writeValueAsString(mergedRoot);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to build merged OMS response", e);
+            throw new CrawlingException("Failed to build merged OMS response", e);
         }
     }
 
@@ -129,14 +131,14 @@ public class SemiBasementHttpClient {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             int code = response.statusCode();
             if (code < 200 || code >= 300) {
-                throw new RuntimeException("HTTP error: " + code + " url=" + url);
+                throw new CrawlingException("HTTP error: " + code + " url=" + url);
             }
 
             return response.body();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("HTTP request failed: " + url, e);
+            throw new CrawlingException("HTTP request failed: " + url, e);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);
+            throw new CrawlingException("Invalid request: " + url + " msg=" + e.getMessage(), e);
         }
     }
 }

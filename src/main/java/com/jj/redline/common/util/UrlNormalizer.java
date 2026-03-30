@@ -1,5 +1,6 @@
 package com.jj.redline.common.util;
 
+import com.jj.redline.exception.BadRequestException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -52,7 +53,7 @@ public final class UrlNormalizer {
 
     private static String normalizeOrigin(String baseOrigin) {
         if (baseOrigin == null || baseOrigin.isBlank()) {
-            throw new IllegalArgumentException("baseOrigin is required");
+            throw new BadRequestException("baseOrigin is required");
         }
         String origin = baseOrigin.trim();
         // 끝에 / 제거

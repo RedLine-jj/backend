@@ -1,5 +1,6 @@
 package com.jj.redline.crawling.modeman;
 
+import com.jj.redline.exception.CrawlingException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -49,16 +50,16 @@ public class ModeManHttpClient {
 
             int code = response.statusCode();
             if (code < 200 || code >= 300) {
-                throw new RuntimeException("HTTP error: " + code + " url=" + encodedUrl);
+                throw new CrawlingException("HTTP error: " + code + " url=" + encodedUrl);
             }
 
             return response.body();
 
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("HTTP request failed: " + encodedUrl, e);
+            throw new CrawlingException("HTTP request failed: " + encodedUrl, e);
         } catch (IllegalArgumentException e) {
             // URI.create(url) 문제거나 restricted header 같은 케이스
-            throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);
+            throw new CrawlingException("Invalid request: " + url + " msg=" + e.getMessage(), e);
         }
     }
 }
