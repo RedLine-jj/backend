@@ -3,7 +3,7 @@ package com.jj.redline.domain.repository;
 import com.jj.redline.domain.entity.Model;
 import com.jj.redline.domain.entity.QBrand;
 import com.jj.redline.domain.entity.QModel;
-import com.jj.redline.domain.entity.ModelType;
+import com.jj.redline.domain.enums.ModelType;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;

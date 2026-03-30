@@ -1,14 +1,14 @@
-package com.jj.redline.crawling.semibasement.detail;
+package com.jj.redline.crawling.imweb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jj.redline.domain.dto.CategoryDto;
-import com.jj.redline.domain.dto.ParseStatus;
-import com.jj.redline.domain.dto.ProductBrief;
-import com.jj.redline.domain.dto.ProductOption;
-import com.jj.redline.domain.dto.ProductSnapshot;
-import com.jj.redline.domain.dto.Site;
-import com.jj.redline.domain.dto.StockStatus;
+import com.jj.redline.domain.dto.crawl.CategoryDto;
+import com.jj.redline.domain.enums.ParseStatus;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
+import com.jj.redline.domain.dto.crawl.ProductOption;
+import com.jj.redline.domain.dto.crawl.ProductSnapshot;
+import com.jj.redline.domain.enums.Site;
+import com.jj.redline.domain.enums.StockStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
-public class SemiBasementDetailParser {
+public class ImwebDetailParser {
 
     private final ObjectMapper objectMapper;
 
-    public SemiBasementDetailParser(ObjectMapper objectMapper) {
+    public ImwebDetailParser(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 

@@ -1,4 +1,4 @@
-package com.jj.redline.domain.dto;
+package com.jj.redline.domain.enums;
 
 
 /**

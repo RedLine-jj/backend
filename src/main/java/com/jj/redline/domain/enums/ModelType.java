@@ -1,4 +1,4 @@
-package com.jj.redline.domain.entity;
+package com.jj.redline.domain.enums;
 
 public enum ModelType {
     DENIM_PANTS("청바지"),

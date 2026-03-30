@@ -1,4 +1,4 @@
-package com.jj.redline.crawling.semibasement;
+package com.jj.redline.crawling.imweb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class SemiBasementHttpClient {
+public class ImwebHttpClient {
 
     private static final String USER_AGENT =
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -26,7 +26,7 @@ public class SemiBasementHttpClient {
     private final HttpClient client;
     private final ObjectMapper objectMapper;
 
-    public SemiBasementHttpClient() {
+    public ImwebHttpClient() {
         this.client = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(5))
@@ -58,7 +58,10 @@ public class SemiBasementHttpClient {
             }
 
             return response.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("HTTP request interrupted: " + encodedUrl, e);
+        } catch (IOException e) {
             throw new RuntimeException("HTTP request failed: " + encodedUrl, e);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);
@@ -133,7 +136,10 @@ public class SemiBasementHttpClient {
             }
 
             return response.body();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("HTTP request interrupted: " + url, e);
+        } catch (IOException e) {
             throw new RuntimeException("HTTP request failed: " + url, e);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid request: " + url + " msg=" + e.getMessage(), e);

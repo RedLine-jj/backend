@@ -1,7 +1,8 @@
 package com.jj.redline.crawling.modeman.list;
 
-import com.jj.redline.crawling.modeman.ModeManHttpClient;
-import com.jj.redline.domain.dto.ProductBrief;
+import com.jj.redline.crawling.cafe24.Cafe24HttpClient;
+import com.jj.redline.crawling.cafe24.Cafe24ListParser;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,8 +22,8 @@ class ModeManListIntegrationTest {
 
         assumeTrue(enabled, "integration test skipped. add -Dit=true or set IT=true");
 
-        ModeManHttpClient http = new ModeManHttpClient();
-        ModeManListParser parser = new ModeManListParser();
+        Cafe24HttpClient http = new Cafe24HttpClient();
+        Cafe24ListParser parser = new Cafe24ListParser(new com.jj.redline.crawling.config.ModeManSiteConfig());
 
         String url = "https://mode-man.com/product/list.html?cate_no=263";
 

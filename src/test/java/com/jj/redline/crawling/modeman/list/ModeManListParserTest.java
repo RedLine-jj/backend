@@ -1,6 +1,8 @@
 package com.jj.redline.crawling.modeman.list;
 
-import com.jj.redline.domain.dto.ProductBrief;
+import com.jj.redline.crawling.cafe24.Cafe24ListParser;
+import com.jj.redline.crawling.config.ModeManSiteConfig;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -11,7 +13,7 @@ class ModeManListParserTest {
 
     @Test
     void parse_success_twoProducts_withEcDataPrice() {
-        ModeManListParser parser = new ModeManListParser();
+        Cafe24ListParser parser = new Cafe24ListParser(new ModeManSiteConfig());
 
         String html = """
             <html><body>
@@ -62,7 +64,7 @@ class ModeManListParserTest {
 
     @Test
     void parse_dedupe_sameUrl_keepsFirst() {
-        ModeManListParser parser = new ModeManListParser();
+        Cafe24ListParser parser = new Cafe24ListParser(new ModeManSiteConfig());
 
         String html = """
             <html><body>

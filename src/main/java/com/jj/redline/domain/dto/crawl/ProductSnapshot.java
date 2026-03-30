@@ -1,6 +1,8 @@
-package com.jj.redline.domain.dto;
+package com.jj.redline.domain.dto.crawl;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jj.redline.domain.enums.ParseStatus;
+import com.jj.redline.domain.enums.Site;
 import java.time.OffsetDateTime;
 import java.util.List;
 

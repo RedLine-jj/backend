@@ -1,11 +1,13 @@
 package com.jj.redline.batch.reader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jj.redline.crawling.modeman.list.ListParseResult;
-import com.jj.redline.crawling.semibasement.SemiBasementHttpClient;
-import com.jj.redline.crawling.semibasement.list.SemiBasementListParser;
-import com.jj.redline.domain.dto.CategoryDto;
-import com.jj.redline.domain.dto.ProductBrief;
+import com.jj.redline.domain.dto.crawl.ListParseResult;
+import com.jj.redline.crawling.imweb.ImwebHttpClient;
+import com.jj.redline.crawling.config.SemiBasementSiteConfig;
+import com.jj.redline.domain.dto.crawl.CrawlSiteConfig.CategoryToCrawl;
+import com.jj.redline.crawling.imweb.ImwebListParser;
+import com.jj.redline.domain.dto.crawl.CategoryDto;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
@@ -30,25 +32,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SemiBasementProductReader implements ItemReader<ProductBrief>, StepExecutionListener {
 
-    private record CategoryToCrawl(String code, String name) {}
-
-    private static final String LIST_URL_TEMPLATE = "https://semibasement.com/%s/?page=%d&sort=recent";
-    private static final String DETAIL_URL_TEMPLATE = "https://semibasement.com/%s/?idx=%s";
-
-    private final SemiBasementHttpClient httpClient;
+    private final ImwebHttpClient httpClient;
+    private final SemiBasementSiteConfig siteConfig;
     private final ObjectMapper objectMapper;
 
-    private final List<CategoryToCrawl> categoriesToCrawl = List.of(
-            new CategoryToCrawl("89", "Denim Pants"),
-            new CategoryToCrawl("93", "Denim Jackets")
-    );
-
-    private SemiBasementListParser listParser;
+    private ImwebListParser listParser;
     private Iterator<ProductBrief> productBriefIterator;
 
     @PostConstruct
     void initParser() {
-        this.listParser = new SemiBasementListParser(objectMapper);
+        this.listParser = new ImwebListParser(objectMapper);
     }
 
     @Override
@@ -56,12 +49,14 @@ public class SemiBasementProductReader implements ItemReader<ProductBrief>, Step
         log.info("Initializing SemiBasementProductReader: Fetching all product briefs...");
         ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
 
-        String categoryNames = categoriesToCrawl.stream()
+        List<CategoryToCrawl> categories = siteConfig.getCategories();
+
+        String categoryNames = categories.stream()
                 .map(CategoryToCrawl::name)
                 .collect(Collectors.joining(", "));
         jobExecutionContext.putString("crawledCategoryNames", categoryNames);
 
-        String categoryCodes = categoriesToCrawl.stream()
+        String categoryCodes = categories.stream()
                 .map(CategoryToCrawl::code)
                 .collect(Collectors.joining(", "));
         jobExecutionContext.putString("crawledCategoryCodes", categoryCodes);
@@ -86,12 +81,15 @@ public class SemiBasementProductReader implements ItemReader<ProductBrief>, Step
 
     private void initialize() {
         List<ProductBrief> allProductBriefs = new CopyOnWriteArrayList<>();
+        String listUrlTemplate = siteConfig.getListUrlTemplate();
+        String detailUrlTemplate = siteConfig.getDetailUrlTemplate();
+        String siteName = siteConfig.getSite().name();
 
-        categoriesToCrawl.parallelStream().forEach(category -> {
+        siteConfig.getCategories().parallelStream().forEach(category -> {
             int page = 1;
             Set<String> previousPageKeys = new HashSet<>();
             while (true) {
-                String listUrl = String.format(LIST_URL_TEMPLATE, category.code(), page);
+                String listUrl = String.format(listUrlTemplate, category.code(), page);
                 try {
                     log.debug("Fetching product list for category: {} (URL: {})", category.name(), listUrl);
                     String html = httpClient.getHtml(listUrl);
@@ -116,8 +114,8 @@ public class SemiBasementProductReader implements ItemReader<ProductBrief>, Step
 
                     List<ProductBrief> briefsWithCategory = parseResult.getProductBriefs().stream()
                             .map(brief -> brief.toBuilder()
-                                    .site("SEMI_BASEMENT")
-                                    .url(String.format(DETAIL_URL_TEMPLATE, category.code(), brief.getProductKey()))
+                                    .site(siteName)
+                                    .url(String.format(detailUrlTemplate, category.code(), brief.getProductKey()))
                                     .category(categoryDto)
                                     .build())
                             .collect(Collectors.toList());

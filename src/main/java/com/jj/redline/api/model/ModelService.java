@@ -3,7 +3,7 @@ package com.jj.redline.api.model;
 import com.jj.redline.domain.dto.common.CursorPageResponse;
 import com.jj.redline.domain.dto.model.ModelResponse;
 import com.jj.redline.domain.entity.Model;
-import com.jj.redline.domain.entity.ModelType;
+import com.jj.redline.domain.enums.ModelType;
 import com.jj.redline.domain.repository.ModelRepository;
 import com.jj.redline.domain.repository.SiteOptionRepository;
 import lombok.RequiredArgsConstructor;

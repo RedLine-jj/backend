@@ -1,6 +1,5 @@
-package com.jj.redline.crawling.modeman.list;
+package com.jj.redline.domain.dto.crawl;
 
-import com.jj.redline.domain.dto.ProductBrief;
 import lombok.Builder;
 import lombok.Value;
 

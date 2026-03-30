@@ -1,6 +1,6 @@
 package com.jj.redline.domain.dto.model;
 
-import com.jj.redline.domain.entity.ModelType;
+import com.jj.redline.domain.enums.ModelType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

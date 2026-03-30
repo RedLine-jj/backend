@@ -1,15 +1,15 @@
-package com.jj.redline.crawling.modeman.detail;
+package com.jj.redline.crawling.cafe24;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jj.redline.common.util.QueryParamExtractor;
-import com.jj.redline.domain.dto.CategoryDto;
-import com.jj.redline.domain.dto.ParseStatus;
-import com.jj.redline.domain.dto.ProductBrief;
-import com.jj.redline.domain.dto.ProductOption;
-import com.jj.redline.domain.dto.ProductSnapshot;
-import com.jj.redline.domain.dto.Site;
-import com.jj.redline.domain.dto.StockStatus;
+import com.jj.redline.domain.dto.crawl.CategoryDto;
+import com.jj.redline.domain.enums.ParseStatus;
+import com.jj.redline.domain.dto.crawl.ProductBrief;
+import com.jj.redline.domain.dto.crawl.ProductOption;
+import com.jj.redline.domain.dto.crawl.ProductSnapshot;
+import com.jj.redline.domain.enums.Site;
+import com.jj.redline.domain.enums.StockStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,13 +20,14 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 @Component
-public class ModeManJsonLdParser {
+public class Cafe24JsonLdParser {
 
     private final ObjectMapper objectMapper;
 
-    public ModeManJsonLdParser(ObjectMapper objectMapper) {
+    public Cafe24JsonLdParser(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -52,8 +53,12 @@ public class ModeManJsonLdParser {
 
         for (Element script : scripts) {
             String jsonText = script.data();
-            if (jsonText == null || jsonText.isBlank()) jsonText = script.html();
-            if (jsonText == null || jsonText.isBlank()) continue;
+            if (jsonText == null || jsonText.isBlank()) {
+                jsonText = script.html();
+            }
+            if (jsonText == null || jsonText.isBlank()) {
+                continue;
+            }
 
             try {
                 JsonNode root = objectMapper.readTree(jsonText);
@@ -63,7 +68,6 @@ public class ModeManJsonLdParser {
                     break;
                 }
             } catch (Exception ignore) {
-                // JSON 파싱 실패는 다음 script로 넘어감
             }
         }
 
@@ -71,17 +75,22 @@ public class ModeManJsonLdParser {
             return failSnapshot(site, category, capturedAt, brief, "NO_PRODUCT_NODE");
         }
 
-        // [수정] HTML 엔티티를 디코딩(unescape)하는 로직 추가
-        String name = unescape(textOrNull(productNode.get("name")));
+        String name = cleanProductName(unescape(textOrNull(productNode.get("name"))));
         String brand = toUpperOrNull(unescape(textOrNull(productNode.path("brand").path("name"))));
         String imageUrl = extractFirstImage(productNode.get("image"));
         JsonNode offersNode = productNode.get("offers");
 
         Long jsonLdPrice = extractPriceFromOffers(offersNode);
 
-        if (isBlank(name) && brief != null) name = brief.getName();
-        if (isBlank(brand) && brief != null) brand = brief.getBrand();
-        if (isBlank(imageUrl) && brief != null) imageUrl = brief.getImageUrl();
+        if (isBlank(name) && brief != null) {
+            name = cleanProductName(brief.getName());
+        }
+        if (isBlank(brand) && brief != null) {
+            brand = toUpperOrNull(brief.getBrand());
+        }
+        if (isBlank(imageUrl) && brief != null) {
+            imageUrl = brief.getImageUrl();
+        }
         Long finalPrice = jsonLdPrice != null ? jsonLdPrice : (brief != null ? brief.getPrice() : null);
 
         List<ProductOption> options = new ArrayList<>();
@@ -116,9 +125,10 @@ public class ModeManJsonLdParser {
     }
 
     private void parseOfferIntoOptions(JsonNode offer, String productName, List<ProductOption> options) {
-        if (offer == null || offer.isNull()) return;
+        if (offer == null || offer.isNull()) {
+            return;
+        }
 
-        // [수정] HTML 엔티티 디코딩 추가
         String offerName = unescape(textOrNull(offer.get("name")));
         String availability = textOrNull(offer.get("availability"));
         String offerUrl = textOrNull(offer.get("url"));
@@ -134,13 +144,15 @@ public class ModeManJsonLdParser {
                 .status(stockStatus)
                 .build();
 
-        if (!isBlank(option.getOptionLabel())) {
+        if (!isBlank(option.getOptionLabel()) && !containsKorean(option.getOptionLabel())) {
             options.add(option);
         }
     }
 
     private Long extractPriceFromOffers(JsonNode offersNode) {
-        if (offersNode == null || offersNode.isNull()) return null;
+        if (offersNode == null || offersNode.isNull()) {
+            return null;
+        }
 
         JsonNode offerToParse;
         if (offersNode.isArray() && offersNode.size() > 0) {
@@ -159,21 +171,29 @@ public class ModeManJsonLdParser {
     }
 
     private JsonNode findProductNode(JsonNode node) {
-        if (node == null || node.isNull()) return null;
+        if (node == null || node.isNull()) {
+            return null;
+        }
 
-        if (isProductType(node)) return node;
+        if (isProductType(node)) {
+            return node;
+        }
 
         JsonNode graph = node.get("@graph");
         if (graph != null && graph.isArray()) {
             for (JsonNode n : graph) {
-                if (isProductType(n)) return n;
+                if (isProductType(n)) {
+                    return n;
+                }
             }
         }
 
         if (node.isArray()) {
             for (JsonNode n : node) {
                 JsonNode found = findProductNode(n);
-                if (found != null) return found;
+                if (found != null) {
+                    return found;
+                }
             }
         }
 
@@ -183,7 +203,9 @@ public class ModeManJsonLdParser {
                 String field = it.next();
                 JsonNode child = node.get(field);
                 JsonNode found = findProductNode(child);
-                if (found != null) return found;
+                if (found != null) {
+                    return found;
+                }
             }
         }
 
@@ -192,43 +214,61 @@ public class ModeManJsonLdParser {
 
     private boolean isProductType(JsonNode node) {
         JsonNode type = node.get("@type");
-        if (type == null || type.isNull()) return false;
+        if (type == null || type.isNull()) {
+            return false;
+        }
 
         if (type.isTextual()) {
             return "Product".equalsIgnoreCase(type.asText());
         }
         if (type.isArray()) {
             for (JsonNode t : type) {
-                if (t.isTextual() && "Product".equalsIgnoreCase(t.asText())) return true;
+                if (t.isTextual() && "Product".equalsIgnoreCase(t.asText())) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
     private StockStatus mapAvailabilityToStatus(String availability) {
-        if (availability == null) return StockStatus.SOLD_OUT;
+        if (availability == null) {
+            return StockStatus.SOLD_OUT;
+        }
 
         String a = availability.trim().toLowerCase();
-        if (a.endsWith("instock")) return StockStatus.AVAILABLE;
-        if (a.endsWith("outofstock")) return StockStatus.SOLD_OUT;
+        if (a.endsWith("instock")) {
+            return StockStatus.AVAILABLE;
+        }
+        if (a.endsWith("outofstock")) {
+            return StockStatus.SOLD_OUT;
+        }
 
         return StockStatus.SOLD_OUT;
     }
 
     private String extractFirstImage(JsonNode imageNode) {
-        if (imageNode == null || imageNode.isNull()) return null;
+        if (imageNode == null || imageNode.isNull()) {
+            return null;
+        }
 
-        if (imageNode.isTextual()) return imageNode.asText();
+        if (imageNode.isTextual()) {
+            return imageNode.asText();
+        }
 
         if (imageNode.isArray() && imageNode.size() > 0) {
             JsonNode first = imageNode.get(0);
-            if (first != null && first.isTextual()) return first.asText();
+            if (first != null && first.isTextual()) {
+                return first.asText();
+            }
         }
         return null;
     }
 
     private String extractOptionLabel(String offerName, String productName) {
-        if (isBlank(offerName)) return null;
+        if (isBlank(offerName)) {
+            return null;
+        }
 
         String s = offerName.trim();
 
@@ -242,7 +282,9 @@ public class ModeManJsonLdParser {
         String[] tokens = s.split("\\s+");
         if (tokens.length >= 1) {
             String last = tokens[tokens.length - 1].trim();
-            if (!isBlank(last)) return last;
+            if (!isBlank(last)) {
+                return last;
+            }
         }
         return null;
     }
@@ -264,21 +306,45 @@ public class ModeManJsonLdParser {
     }
 
     private String textOrNull(JsonNode node) {
-        if (node == null || node.isNull() || !node.isTextual()) return null;
+        if (node == null || node.isNull() || !node.isTextual()) {
+            return null;
+        }
         return node.asText();
     }
 
+    private static final java.util.regex.Pattern BRACKET_PREFIX = java.util.regex.Pattern.compile("^\\[.*?]\\s*");
+    private static final java.util.regex.Pattern STATUS_TAG = java.util.regex.Pattern.compile("\\((?:RESTOCK|RE-?STOCK|NEW ARRIVAL|PRE[- ]?ORDER)\\)", java.util.regex.Pattern.CASE_INSENSITIVE);
+
     private String unescape(String text) {
-        if (isBlank(text)) return text;
-        return Parser.unescapeEntities(text, false);
+        if (isBlank(text)) {
+            return text;
+        }
+        return Jsoup.parse(text).text();
+    }
+
+    static String cleanProductName(String name) {
+        if (name == null || name.isBlank()) {
+            return name;
+        }
+        String cleaned = STATUS_TAG.matcher(name).replaceAll("");
+        cleaned = BRACKET_PREFIX.matcher(cleaned.trim()).replaceAll("");
+        return cleaned.trim();
     }
 
     private String toUpperOrNull(String value) {
-        if (isBlank(value)) return null;
-        return value.toUpperCase(java.util.Locale.ROOT);
+        if (isBlank(value)) {
+            return null;
+        }
+        return value.toUpperCase(Locale.ROOT);
     }
 
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    private static final java.util.regex.Pattern KOREAN = java.util.regex.Pattern.compile("[가-힣]");
+
+    private boolean containsKorean(String s) {
+        return s != null && KOREAN.matcher(s).find();
     }
 }
